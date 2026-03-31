@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/image/logo/tutwuri-logo.svg">
     <title>BOE-Space Reserve | Admin Control</title>
+    <link rel="icon" href="/image/logo/tutwuri-logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -65,7 +65,7 @@
                     </div>
 
                     <div class="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center text-3xl font-black shadow-inner">
-                        2
+                        {{ $admins->count() }}
                     </div>
                 </div>
             </div>
@@ -123,39 +123,57 @@
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                 </span>
-                                <span class="text-[11px] text-slate-400 font-bold tracking-tight">2 Active Administrators</span>
+                                <span class="text-[11px] text-slate-400 font-bold tracking-tight">{{ $admins->count() }} Active Administrators</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="space-y-1 px-2 pb-2">
-                        <div class="group flex items-center gap-4 p-4 rounded-[2rem] transition-all duration-300 hover:bg-rose-50/50 cursor-pointer border border-transparent hover:border-rose-100/50">
-                            <div class="relative group/avatar">
-                                <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-rose-500 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 ease-out">
-                                    <i class="fas fa-user-shield text-xl"></i>
-                                </div>
+                        <div class="space-y-3 px-2 pb-2">
+                             @foreach($admins as $index => $admin)
+                                <div class="group flex items-center gap-4 p-4 rounded-[2rem] 
+                                            transition-all duration-300 
+                                            hover:bg-blue-50/50 
+                                            cursor-pointer 
+                                            border border-transparent 
+                                            hover:border-blue-100/50">
 
-                                <div class="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center">
-                                    <div class="relative flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-sm ring-2 ring-white">
-                                        
-                                        <span class="relative flex h-3 w-3 rounded-full bg-rose-500">
-                                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
-                                        </span>
-                                        
+                                    <div class="relative">
+                                        <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-100 
+                                                    flex items-center justify-center text-blue-500
+                                                    group-hover:scale-110 group-hover:-rotate-3 
+                                                    transition-all duration-500 ease-out">
+                                            <i class="fas fa-user-shield text-xl"></i>
+                                        </div>
+
+                                        <!-- online indicator -->
+                                        <div class="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center">
+                                            <div class="relative flex h-5 w-5 items-center justify-center 
+                                                        rounded-full bg-white shadow-sm ring-2 ring-white">
+                                                <span class="relative flex h-3 w-3 rounded-full bg-green-500">
+                                                    <span class="absolute inline-flex h-full w-full animate-ping 
+                                                                rounded-full bg-green-400 opacity-75"></span>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    <div class="flex flex-col flex-1">
+                                        <span class="text-[10px] font-bold text-blue-400 uppercase tracking-[0.15em]">
+                                            Admin {{ $index + 1 }}
+                                        </span>
+                                        <span class="text-[15px] font-bold text-slate-700 tracking-tight">
+                                            {{ $admin->username }}
+                                        </span>
+                                    </div>
+
+                                    <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <i class="fas fa-chevron-right text-blue-300 text-xs"></i>
+                                    </div>
+
                                 </div>
-                            </div>
-
-                            <div class="flex flex-col flex-1">
-                                <span class="text-[10px] font-bold text-rose-400 uppercase tracking-[0.15em]">Admin 1</span>
-                                <span class="text-[15px] font-bold text-slate-700 tracking-tight">MyAdmin01@gmail.com</span>
-                            </div>
-                            
-                            <div class="opacity-0 group-hover:opacity-100 transition-opacity pr-4">
-                                <i class="fas fa-chevron-right text-rose-300 text-xs"></i>
-                            </div>
+                            @endforeach
                         </div>
-
                         <div class="group flex items-center gap-4 p-4 rounded-[2rem] transition-all duration-300 hover:bg-blue-50/50 cursor-pointer border border-transparent hover:border-blue-100/50">
                             <div class="relative group/avatar">
                                 <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-500 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 ease-out">
@@ -171,11 +189,6 @@
                                         
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="flex flex-col flex-1">
-                                <span class="text-[10px] font-bold text-blue-400 uppercase tracking-[0.15em]">Admin 2</span>
-                                <span class="text-[15px] font-bold text-slate-700 tracking-tight">MyAdmin02@gmail.com</span>
                             </div>
 
                             <div class="opacity-0 group-hover:opacity-100 transition-opacity pr-4">
@@ -238,42 +251,61 @@
                     </div>
 
                     <div class="p-6 space-y-4 bg-slate-50/50">
-                        
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap md:flex-nowrap items-center gap-4 hover:border-blue-300 transition-colors shadow-sm">
-                            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-red-500 shrink-0">
+                        @foreach($admins as $index => $admin)
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 
+                                    flex flex-wrap md:flex-nowrap items-center gap-4 
+                                    hover:border-blue-300 transition-colors shadow-sm 
+                                    {{ $loop->first ? '' : 'opacity-80' }}">
+
+                            <div class="w-12 h-12 bg-slate-100 rounded-full 
+                                        flex items-center justify-center 
+                                        {{ $loop->first ? 'text-red-500' : 'text-blue-500' }} 
+                                        shrink-0">
                                 <i class="fas fa-user text-xl"></i>
                             </div>
                             
                             <div class="flex-1 min-w-[200px]">
-                                <div class="bg-slate-50 rounded-xl px-4 py-2 border border-slate-100 flex items-center justify-between">
-                                    <span class="text-sm font-medium text-slate-600 truncate mr-2">MyAdmin01@gmail.com</span>
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-green-50 text-green-600 border border-green-100">
-                                        <span class="relative flex h-2 w-2">
-                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                        </span>
-                                        ONLINE
+                                <div class="bg-slate-50 rounded-xl px-4 py-2 border border-slate-100 
+                                            flex items-center justify-between">
+
+                                    <span class="text-sm font-medium text-slate-600 truncate mr-2">
+                                        {{ $admin->username }}
                                     </span>
+
+                                    @if($loop->first)
+                                        <!-- ONLINE -->
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 
+                                                    rounded-full text-[10px] font-black 
+                                                    bg-green-50 text-green-600 border border-green-100">
+                                            <span class="relative flex h-2 w-2">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                            </span>
+                                            ONLINE
+                                        </span>
+                                    @else
+                                        <!-- OFFLINE -->
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 
+                                                    rounded-full text-[10px] font-black 
+                                                    bg-slate-50 text-slate-400 border border-slate-200/60">
+                                            <span class="relative flex h-2 w-2">
+                                                <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-slate-300 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-slate-400"></span>
+                                            </span>
+                                            OFFLINE
+                                        </span>
+                                    @endif
+
                                 </div>
                             </div>
 
                             <div class="flex items-center gap-2 w-full md:w-auto">
-                                <a href="/admin/dashboard/management/view_admin" 
-                                onclick="btnLoading(event, this)"
-                                class="btn-view flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all no-underline overflow-hidden">
-                                    
-                                    <div class="loader-container flex items-center justify-center transition-all duration-300">
-                                        <i class="fas fa-eye icon-default"></i> 
-                                        
-                                        <svg class="icon-loading hidden animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
-                                    
-                                    <span class="text-default">View</span>
+                                <a href="{{ route('admin.view', $admin->id_log) }}"
+                                    class="flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all">
+                                    <i class="fas fa-eye"></i> View
                                 </a>
-                                <a href="/admin/dashboard/management/manage_admin_control" 
+
+                                <a href="{{ route('admin.manage', $admin->id_log) }}" 
                                 onclick="handleLoading(event, this)"
                                 class="relative flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-emerald-600 hover:text-white transition-all overflow-hidden min-w-[70px]">
                                     
@@ -281,83 +313,17 @@
                                         <i class="fas fa-user-edit"></i> 
                                         <span>Manage</span>
                                     </div>
-
-                                    <div class="loading-content hidden absolute inset-0 flex items-center justify-center bg-emerald-600 text-white">
-                                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
                                 </a>
-                                <button onclick="openLogoutModal()" class="flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-rose-50 text-rose-600 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all duration-300 shadow-sm">
+
+                                <button onclick="openLogoutModal()" 
+                                        class="flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-rose-50 text-rose-600 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all duration-300 shadow-sm">
                                     <i class="fas fa-power-off"></i> 
                                     <span>Logout</span>
                                 </button>
                             </div>
                         </div>
-
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap md:flex-nowrap items-center gap-4 hover:border-blue-300 transition-colors shadow-sm opacity-80">
-                            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-blue-500 shrink-0">
-                                <i class="fas fa-user text-xl"></i>
-                            </div>
-                            
-                            <div class="flex-1 min-w-[200px]">
-                                <div class="bg-slate-50 rounded-xl px-4 py-2 border border-slate-100 flex items-center justify-between">
-                                    <span class="text-sm font-medium text-slate-600 truncate mr-2">MyAdmin02@gmail.com</span>
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-slate-50 text-slate-400 border border-slate-200/60">
-                                        <span class="relative flex h-2 w-2">
-                                            <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-slate-300 opacity-75"></span>
-                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-slate-400"></span>
-                                        </span>
-                                        OFFLINE
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-2 w-full md:w-auto">
-                                <a href="/admin/dashboard/management/view_admin" 
-                                onclick="btnLoading(event, this)"
-                                class="btn-view flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all no-underline overflow-hidden">
-                                    
-                                    <div class="loader-container flex items-center justify-center transition-all duration-300">
-                                        <i class="fas fa-eye icon-default"></i> 
-                                        
-                                        <svg class="icon-loading hidden animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
-                                    
-                                    <span class="text-default">View</span>
-                                </a>
-                                <a href="/admin/dashboard/management/manage_admin_control" 
-                                onclick="handleLoading(event, this)"
-                                class="relative flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-emerald-600 hover:text-white transition-all overflow-hidden min-w-[70px]">
-                                    
-                                    <div class="flex flex-col items-center gap-1 btn-content">
-                                        <i class="fas fa-user-edit"></i> 
-                                        <span>Manage</span>
-                                    </div>
-
-                                    <div class="loading-content hidden absolute inset-0 flex items-center justify-center bg-emerald-600 text-white">
-                                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
-                                </a>
-                                <button onclick="openLogoutModal()" class="flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-rose-50 text-rose-600 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all duration-300 shadow-sm">
-                                    <i class="fas fa-power-off"></i> 
-                                    <span>Logout</span>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                        @endforeach
+                    </div> 
 
     <div id="logoutModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
@@ -399,6 +365,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // selektor modal batal
             const modal = document.getElementById('cancelModal');
             const modalActions = document.getElementById('modalActions');
             const modalLoading = document.getElementById('modalLoading');
@@ -461,38 +428,6 @@
                     }
                 });
             }
-
-            window.btnLoading = function(event, element) {
-                event.preventDefault();
-                const url = element.getAttribute('href');
-                
-                // Seleksi ikon DAN teks
-                const iconDefault = element.querySelector('.icon-default');
-                const iconLoading = element.querySelector('.icon-loading');
-                const textDefault = element.querySelector('.text-default');
-
-                if (iconDefault && iconLoading) {
-                    // Sembunyikan ikon mata
-                    iconDefault.classList.add('hidden');
-                    
-                    // Sembunyikan teks (View)
-                    if (textDefault) {
-                        textDefault.classList.add('hidden');
-                    }
-                    
-                    // Munculkan ikon loading
-                    iconLoading.classList.remove('hidden');
-                    
-                    element.classList.add('opacity-80', 'pointer-events-none');
-                    element.style.cursor = 'wait';
-
-                    setTimeout(() => {
-                        window.location.href = url;
-                    }, 800);
-                } else {
-                    window.location.href = url;
-                }
-            };
 
             window.handleLoading = function(event, element) {
                 event.preventDefault();

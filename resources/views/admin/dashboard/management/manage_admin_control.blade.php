@@ -145,12 +145,15 @@
                     <p class="text-slate-500 text-sm">Perbarui informasi kredensial dan hak akses admin di sini.</p>
                 </div>
 
-                <form class="space-y-6">
+                <form action="{{ route('admin.update', $admin->id_log) }}" method="POST" class="space-y-6">
+                    @csrf
+                    @method('PUT')
+
                     <div class="grid grid-cols-1 gap-6">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Email / Username</label>
                             <div class="relative">
-                                <input type="text" value="MyAdmin01@gmail.com" 
+                                <input name="username" type="text" value="{{ $admin->username }}"
                                     class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none text-slate-700 font-medium">
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,7 +171,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">New Password</label>
-                                <input type="password" placeholder="Enter new password" 
+                                <input name="password" type="password" placeholder="Enter new password" 
                                     class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none italic text-sm">
                             </div>
                         </div>
@@ -242,57 +245,66 @@
     });
 
     document.getElementById('btn-simpan').addEventListener('click', function(e) {
-        e.preventDefault(); 
+            e.preventDefault();
 
-        const btn = this;
-        const originalText = btn.innerHTML;
+            const form = this.closest('form');
+            const formData = new FormData(form);
 
-        btn.disabled = true;
-        btn.classList.add('opacity-80', 'cursor-not-allowed');
-        btn.innerHTML = `
-            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Memproses...</span>
-        `;
-
-        // Jalankan Modal Loading Global
-        Swal.fire({
-            title: 'Menyimpan Data',
-            html: 'Sedang mengunggah perubahan ke server...',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
-            customClass: {
-                popup: 'my-swal-popup',
-                title: 'my-swal-title'
-            }
-        });
-
-        // Response Server
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.classList.remove('opacity-80', 'cursor-not-allowed');
-            btn.innerHTML = originalText;
+            // 🔥 penting untuk Laravel PUT
+            formData.append('_method', 'PUT');
 
             Swal.fire({
-                icon: 'success',
-                iconColor: '#10b981', 
-                title: 'Berhasil Disimpan!',
-                text: 'Data admin telah diperbarui secara aman.',
-                showConfirmButton: false,
-                timer: 2000,
-                timerProgressBar: true,
-                customClass: {
-                    popup: 'my-swal-popup',
-                    title: 'my-swal-success-title',
-                    timerProgressBar: 'my-swal-progress-bar' 
-                }
+                title: 'Menyimpan Data',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
             });
-        }, 1500);
-    });
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async (response) => {
+                let data;
+
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = null;
+                }
+
+                if (!response.ok || !data) {
+                    throw { message: 'Server tidak mengembalikan JSON yang valid' };
+                }
+
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message
+                    });
+                } else {
+                    throw { message: data.message || 'Gagal update' };
+                }
+
+                setTimeout(() => {
+                    location.reload(); // 🔥 AUTO REFRESH
+                }, 1600);
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: err.message || 'Terjadi kesalahan'
+                });
+            });
+        });
     </script>
 </body>
 </html>

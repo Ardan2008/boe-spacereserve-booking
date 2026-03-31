@@ -1,6 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+// --- TAMBAHKAN IMPORT CONTROLLER DI SINI ---
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\AdminsController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\FasilitasController;
+use App\Http\Controllers\KontrolJadwalController;
+use App\Http\Controllers\RiwayatController;
+
+// --- ROUTE ASLI KAMU (TIDAK DIUBAH) ---
 
 Route::get('/', function () {
     return view('home');
@@ -28,9 +39,7 @@ Route::get('/admin/dashboard/layouts/sidebar', function () {
     return view('admin.dashboard.layouts.sidebar');
 })->name('dashboardSidebar');
 
-Route::get('/admin/dashboard/dataFasilitas', function (){
-    return view('admin.dashboard.dataFasilitas');
-})->name('dashboardFasilitas');
+Route::get('/admin/dashboard/dataFasilitas', [FasilitasController::class, 'index'])->name('fasilitas.index');
 
 Route::get('/admin/dashboard/dataHargaSewa', function (){
     return view('admin.dashboard.dataHargaSewa');
@@ -67,9 +76,9 @@ Route::get('/admin/dashboard/detail/detailPenyewa', function () {
 })->name('dashboarddetailPenyewa');
 
 // Edit
-Route::get('/admin/dashboard/edit/editFasilitas', function () {
-    return view('admin.dashboard.edit.editFasilitas');
-})->name('dashboardeditFasilitas');
+// Route::get('/admin/dashboard/edit/editFasilitas', function () {
+//     return view('admin.dashboard.edit.editFasilitas');
+// })->name('dashboardeditFasilitas');
 
 // Create
 Route::get('/admin/dashboard/create/createFasilitas', function () {
@@ -81,14 +90,46 @@ Route::get('/admin/dashboard/management/add_new_admin', function () {
     return view('admin.dashboard.management.add_new_admin');
 })->name('dashboardAddNewAdmin');
 
-Route::get('/admin/dashboard/management/admin_active_control', function () {
-    return view('admin.dashboard.management.admin_active_control');
-})->name('dashboardAdminActiveControl');
 
-Route::get('/admin/dashboard/management/manage_admin_control', function () {
-    return view('admin.dashboard.management.manage_admin_control');
-})->name('dashboardManageAdminControl');
 
 Route::get('/admin/dashboard/management/view_admin', function () {
     return view('admin.dashboard.management.view_admin');
 })->name('dashboardViewAdmin');
+
+Route::post('/admin/store', [AdminsController::class, 'store'])->name('admin.store');
+
+
+// --- TAMBAHKAN ROUTE LOGIKA CONTROLLER DI BAWAH INI ---
+
+// Auth Admin
+Route::post('/admin/login', [AdminsController::class, 'login'])->name('admin.login');
+Route::get('/admin/logout', [AdminsController::class, 'logout'])->name('admin.logout');
+
+// Dashboard Data (Index Logic)
+Route::get('/admin/dashboard/stats', [AdminsController::class, 'index'])->name('admin.stats');
+
+Route::put('/admin/update/{id_log}', [AdminsController::class, 'update'])->name('admin.update');
+
+// Pastikan parameter {id} sesuai dengan yang dikirim dari halaman daftar admin
+Route::get('/admin/manage/{id_log}', [AdminsController::class, 'manage'])->name('admin.manage');
+
+// Management Admin Logic
+Route::get('/admin/view/{id_log}', [AdminsController::class, 'view'])->name('admin.view');
+Route::get('/admin/dashboard/management/active-list', [AdminsController::class, 'adminActiveControl'])->name('admin.active.list');
+Route::get('/admin/dashboard/management/view/{id}', [AdminsController::class, 'view'])->name('admin.view.detail');
+
+Route::get('/admin/dashboard/management/admin_active_control', [AdminsController::class, 'adminActiveControl'])->name('admin.active.control');
+
+// Tambahkan route ini agar form bisa mengirim data ke function store
+Route::post('/admin/fasilitas/store', [FasilitasController::class, 'store'])->name('fasilitas.store');
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+    // 1. Route untuk MENAMPILKAN halaman (pake GET)
+Route::get('/admin/dashboard/edit/{id}', [FasilitasController::class, 'edit'])->name('fasilitas.edit');
+
+// 2. Route untuk PROSES UPDATE ke database (pake PUT)
+Route::put('/admin/dashboard/update/{id}', [FasilitasController::class, 'update'])->name('fasilitas.update');
+
+// delete
+Route::delete('/admin/fasilitas/delete/{id}', [FasilitasController::class, 'destroy'])->name('fasilitas.destroy');

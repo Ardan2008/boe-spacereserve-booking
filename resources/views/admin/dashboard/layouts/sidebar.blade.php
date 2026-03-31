@@ -104,9 +104,23 @@
                 Kontrol Jadwal
             </a>
 
-            <a href="/admin/dashboard/jadwalBooking" class="{{ request()->is('admin/dashboard/jadwalBooking') ? 'sidebar-active' : 'text-slate-500 hover:text-[#1265A8] hover:bg-slate-50' }} flex items-center px-4 py-3 rounded-xl transition-all font-semibold">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Jadwal Booking
+            <a href="/admin/dashboard/jadwalBooking"
+                class="{{ request()->is('admin/dashboard/jadwalBooking') ? 'sidebar-active' : 'text-slate-500 hover:text-[#1265A8] hover:bg-slate-50' }} 
+                flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold">
+
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Jadwal Booking
+                </div>
+
+                @if(isset($totalPending) && $totalPending > 0)
+                <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded-full animate-pulse">
+                    {{ $totalPending }}
+                </span>
+                @endif
             </a>
 
             <a href="/admin/dashboard/historyBooking" class="{{ request()->is('admin/dashboard/historyBooking') ? 'sidebar-active' : 'text-slate-500 hover:text-[#1265A8] hover:bg-slate-50' }} flex items-center px-4 py-3 rounded-xl transition-all font-semibold">

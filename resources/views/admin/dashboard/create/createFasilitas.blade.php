@@ -44,7 +44,8 @@
                 <div class="h-1 w-12 bg-gradient-to-r from-[#1d6fa5] to-blue-400 mx-auto mt-4 rounded-full"></div>
             </div>
 
-            <form action="#" method="POST" class="p-8 lg:p-12 pt-6">
+            <form action="/admin/fasilitas/store" method="POST" enctype="multipart/form-data" class="p-8 lg:p-12 pt-6">
+                @csrf
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     
                     <div class="space-y-6">
@@ -194,63 +195,42 @@
 
             // memproses loading dan sukses
             function eksekusiSimpanData() {
+                const form = document.querySelector('form');
+                const formData = new FormData(form); // Mengambil semua input & file gambar
                 const overlay = document.getElementById('loadingOverlay');
                 const statusText = document.getElementById('loadingStatus');
                 
                 overlay.classList.remove('hidden');
                 overlay.classList.add('flex');
 
-                const sequences = [
-                    "Memvalidasi input...",
-                    "Mengamankan koneksi...",
-                    "Menyimpan perubahan..."
-                ];
-
-                let step = 0;
-                const interval = setInterval(() => {
-                    if (step < sequences.length) {
-                        statusText.classList.add('opacity-0', 'translate-y-2');
-                        
-                        setTimeout(() => {
-                            statusText.innerText = sequences[step];
-                            statusText.classList.remove('opacity-0', 'translate-y-2');
-                            step++;
-                        }, 300);
+                // KIRIM DATA KE BACKEND (Laravel)
+                fetch('/admin/fasilitas/store', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
                     }
-                }, 800);
-
-                // selesai
-                setTimeout(() => {
-                    clearInterval(interval);
-                    overlay.classList.add('opacity-0');
-                    
-                    setTimeout(() => {
-                        overlay.classList.add('hidden');
-                        overlay.classList.remove('flex', 'opacity-0');
-
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Jika sukses, tampilkan SweetAlert
                         Swal.fire({
-                            title: 'Berhasil Disimpan',
-                            text: 'Data venue telah diperbarui.',
+                            title: 'Berhasil!',
+                            text: data.success,
                             icon: 'success',
-                            iconColor: '#22c55e', 
-                            showConfirmButton: false,
-                            timer: 2000, 
-                            customClass: {
-                                popup: 'rounded-3xl border-none shadow-xl',
-                            }
-                        }).then((result) => {
-                            if (result.dismiss === Swal.DismissReason.timer || result.isConfirmed || true) {
-                                // Efek Fade Out Body
-                                document.body.style.transition = "opacity 0.5s ease"; 
-                                document.body.style.opacity = '0';
-                                
-                                setTimeout(() => {
-                                    window.history.back();
-                                }, 500);
-                            }
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = "/admin/dashboard/dataFasilitas"; // Redirect ke halaman daftar
                         });
-                    }, 500);
-                }, 3000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    overlay.classList.add('hidden');
+                    Swal.fire('Error', 'Gagal menyimpan data', 'error');
+                });
             }
 
             // logika konfirmasi batal

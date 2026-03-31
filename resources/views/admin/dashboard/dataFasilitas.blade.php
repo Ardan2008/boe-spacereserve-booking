@@ -87,18 +87,7 @@
                 
             </div>
         </header>
-
-        @php
-            $facilities = [
-                ['name' => 'Asrama Tunggul Ametung', 'image' => '/image/pictures/booking/tunggul_ametung/ametung.png', 'location' => 'BOE-Space Reserve'],
-                ['name' => 'Asrama Ken Umang', 'image' => '/image/pictures/booking/ken_umang/umang.png', 'location' => 'BOE-Space Reserve'],
-                ['name' => 'Asrama Kendedes', 'image' => '/image/pictures/booking/kendedes/dedes.png', 'location' => 'BOE-Space Reserve'],
-                ['name' => 'Asrama Ken Arok', 'image' => '/image/pictures/booking/ken_arok/arok.png', 'location' => 'BOE-Space Reserve'],
-                ['name' => 'Asrama Kertajaya', 'image' => '/image/pictures/booking/kertajaya/jaya.png', 'location' => 'BOE-Space Reserve'],
-                ['name' => 'Aula BOE', 'image' => '/image/pictures/booking/aula/la.png', 'location' => 'BOE-Space Reserve'],
-            ];
-        @endphp
-
+        
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
         <section x-data="{ openPreview: false, previewImg: '', previewTitle: '' }">
@@ -114,10 +103,11 @@
                             <span class="relative inline-flex rounded-full h-2 w-2 bg-[#1265A8]"></span>
                         </span>
                         <p class="text-[13px] font-medium text-slate-500 uppercase tracking-wider">
-                            Total <span class="text-slate-900 font-bold">6</span> Fasilitas <span class="lowercase">tersedia</span>
+                            Total <span class="text-slate-900 font-bold">{{ count($facilities) }}</span> Fasilitas <span class="lowercase">tersedia</span>
                         </p>
                     </div>
                 </div>
+
                 <a href="/admin/dashboard/create/createFasilitas" id="btnTambah" onclick="handleLoading(event, this)" class="group relative inline-flex items-center gap-2 px-8 py-3.5 bg-[#1265A8] text-white rounded-2xl font-bold text-sm transition-all duration-300 hover:bg-[#0d4d82] hover:shadow-[0_10px_20px_-10px_rgba(18,101,168,0.5)] active:scale-95 overflow-hidden">
                     <div class="absolute inset-0 w-1/2 h-full bg-white/10 skew-x-[-25deg] -translate-x-full group-hover:animate-[shimmer_0.75s_infinite]"></div>
                     
@@ -145,8 +135,8 @@
                     <div class="relative h-52 overflow-hidden cursor-pointer" 
                         @click="openPreview = true; previewImg = '{{ $item['image'] }}'; previewTitle = '{{ $item['name'] }}'">
                         
-                        <img src="{{ $item['image'] }}" 
-                            alt="{{ $item['name'] }}" 
+                        <img src="{{ asset('storage/fasilitas/' . $item->image) }}" 
+                            alt="{{ $item['nama'] }}" 
                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"> <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
                             <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/20 backdrop-blur-md p-3 rounded-full border border-white/50">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,25 +150,46 @@
                     <div class="p-6">
                         <div class="mb-6">
                             <h4 class="text-lg font-bold text-slate-800 mb-1 group-hover:text-[#1265A8] transition-colors">
-                                {{ $item['name'] }}
+                                {{ $item['nama'] }}
                             </h4>
-                            <p class="text-xs uppercase tracking-[0.15em] text-slate-500 font-medium">
-                                {{ $item['location'] }}
+                            <p class="text-slate-500 text-sm line-clamp-2 mb-2">
+                                {{ $item->deskripsi }}
                             </p>
+                            
                         </div>
 
-                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-50">
-                            <button type="button" 
-                                onclick="confirmDelete(this)" 
-                                class="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                            <a href="/admin/dashboard/edit/editFasilitas" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-slate-200 text-slate-600 hover:border-[#1265A8] hover:text-[#1265A8] transition-all font-medium text-sm">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                Edit
-                            </a>
+                        <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-50">
+                            <h4 class="text-sm uppercase tracking-[0.15em] text-[#1265A8] font-black">
+                                Rp {{ number_format($item['harga'] ?? 0, 0, ',', '.') }}
+                            </h4>
+
+                            <div class="flex items-center gap-3">
+                                <form id="delete-form-{{ $item->id }}" action="{{ route('fasilitas.destroy', $item->id) }}" method="POST" class="hidden">
+                                    @csrf
+                                    @method('DELETE')
+                                </form>
+
+                                <button type="button" 
+                                    onclick="confirmDelete('{{ $item->id }}')"
+                                    class="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                                
+                                <a href="{{ route('fasilitas.edit', $item->id) }}" class="btn-edit inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-slate-200 text-slate-600 hover:border-[#1265A8] hover:text-[#1265A8] transition-all font-medium text-sm">
+                                    <div class="button-content flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        Edit
+                                    </div>
+                                    <div class="loading-spinner hidden">
+                                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -213,16 +224,27 @@
                     x-transition:leave-end="opacity-0 scale-95">
                     
                     {{-- Bingkai Gambar (pointer-events-auto agar gambar sendiri tidak 'tembus' klik) --}}
-                    <div class="bg-white p-3 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] overflow-hidden pointer-events-auto">
-                        <img :src="previewImg" 
-                            class="max-h-[70vh] w-auto rounded-[1.8rem] object-contain" 
-                            alt="Preview">
+                    <div class="relative h-150 overflow-hidden cursor-pointer" 
+                        @click="openPreview = true; 
+                                previewImg = '{{ asset('storage/fasilitas/' . $item->image) }}'; 
+                                previewTitle = '{{ $item->nama }}'; 
+                                previewDesc = '{{ $item->deskripsi }}'">
+                        
+                        <img src="{{ asset('storage/fasilitas/' . $item->image) }}" 
+                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                        
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </div>
                     </div>
                     
                     {{-- Info Box --}}
                     <div class="mt-8 text-center pointer-events-auto">
-                        <div class="inline-block px-8 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl">
-                            <h4 x-text="previewTitle" class="text-white text-2xl font-black tracking-tight uppercase"></h4>
+                        <div class="inline-block px-5 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl">
+                            <h4 class="text-white text-xl font-black tracking-tight uppercase">{{ $item['nama'] }}</h4>
                         </div>
                         
                         {{-- Petunjuk Visual --}}
@@ -277,53 +299,26 @@
             }, 600); 
         }
 
-        function confirmDelete(button) {
-            // Mencari card pembungkus terdekat (elemen dengan class 'group')
-            const card = button.closest('.group');
-            // Mengambil nama fasilitas dari h4 di dalam card tersebut
-            const title = card.querySelector('h4').innerText;
-
+        function confirmDelete(id) {
             Swal.fire({
-                title: 'Apakah kamu yakin?',
-                text: `Data "${title}" akan dihapus permanen!`,
+                title: 'Hapus Fasilitas?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#EF4444', 
-                cancelButtonColor: '#64748B', 
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal',
-                reverseButtons: true, 
+                reverseButtons: true,
                 customClass: {
-                    popup: 'rounded-[2rem] font-sans',
-                    confirmButton: 'rounded-xl px-6 py-3 font-bold',
-                    cancelButton: 'rounded-xl px-6 py-3 font-bold'
+                    popup: 'rounded-[2rem] p-8'
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Efek visual menghilang
-                    card.style.transition = 'all 0.5s ease';
-                    card.classList.add('scale-90', 'opacity-0');
-                    
-                    setTimeout(() => {
-                        card.remove(); // Hapus elemen dari DOM
-                        
-                        Swal.fire({
-                            title: 'Terhapus!',
-                            text: 'Data fasilitas berhasil dibersihkan.',
-                            icon: 'success',
-                            iconColor: '#10B981',
-                            timer: 1500,
-                            timerProgressBar: true, // Menampilkan garis jalan di bawah
-                            showConfirmButton: false,
-                            borderRadius: '1.5rem',
-                            customClass: {
-                                popup: 'rounded-[2rem] font-sans',
-                                timerProgressBar: 'bg-emerald-500' 
-                            }
-                        });
-                    }, 500);
+                    // Submit form berdasarkan ID yang dikirim
+                    document.getElementById('delete-form-' + id).submit();
                 }
-            });
+            })
         }
 
         document.getElementById('btnTambah').addEventListener('click', function(e) {

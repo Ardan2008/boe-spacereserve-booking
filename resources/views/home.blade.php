@@ -309,81 +309,24 @@
         <div class="max-w-7xl mx-auto relative z-10">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 
-                @php
-                    $facilities = [
-                        [
-                            'name' => 'Tunggul Ametung',
-                            'desc' => 'Penginapan premium dengan suasana tenang untuk mendukung fokus kegiatan pelatihan.',
-                            'long_desc' => 'Nikmati kenyamanan menginap di Asrama Tunggul Ametung, fasilitas yang dirancang untuk memberikan pengalaman tinggal yang aman dan kondusif.',
-                            'img' => '/image/pictures/booking/tunggul_ametung/tunggul.png',
-                            'detail_img' => '/image/pictures/booking/tunggul_ametung/ametung.png',
-                            'price' => '150k',
-                            'delay' => '100'
-                        ],
-                        [
-                            'name' => 'Ken Umang',
-                            'desc' => 'Ideal untuk peserta pelatihan, menawarkan ketenangan dan keamanan selama masa tinggal.',
-                            'long_desc' => 'Asrama Ken Umang dilengkapi dengan kamar tertata rapi, fasilitas penunjang memadai, dan lingkungan yang asri.',
-                            'img' => '/image/pictures/booking/ken_umang/ken.png',
-                            'detail_img' => '/image/pictures/booking/ken_umang/umang.png',
-                            'price' => '150k',
-                            'delay' => '200'
-                        ],
-                        [
-                            'name' => 'Kendedes',
-                            'desc' => 'Menyediakan hunian asri dengan fasilitas lengkap untuk menunjang istirahat optimal.',
-                            'long_desc' => 'Asrama Kendedes menciptakan suasana yang kondusif untuk belajar dan membangun kebersamaan antar peserta.',
-                            'img' => '/image/pictures/booking/kendedes/ken.png',
-                            'detail_img' => '/image/pictures/booking/kendedes/dedes.png',
-                            'price' => '150k',
-                            'delay' => '300'
-                        ],
-                        [
-                            'name' => 'Ken Arok',
-                            'desc' => 'Fasilitas penginapan dengan akses mudah dan kamar yang didesain untuk kenyamanan maksimal.',
-                            'long_desc' => 'Asrama Ken Arok menawarkan suasana tenang yang mendukung istirahat optimal bagi para tamu dan peserta seminar.',
-                            'img' => '/image/pictures/booking/ken_arok/ken.png',
-                            'detail_img' => '/image/pictures/booking/ken_arok/arok.png',
-                            'price' => '150k',
-                            'delay' => '100'
-                        ],
-                        [
-                            'name' => 'Kertajaya',
-                            'desc' => 'Hunian modern dengan sirkulasi udara yang baik dan desain interior yang fungsional.',
-                            'long_desc' => 'Asrama Kertajaya adalah tempat ideal untuk beristirahat dan bersosialisasi dengan fasilitas yang lengkap dan terawat.',
-                            'img' => '/image/pictures/booking/kertajaya/kerta.png',
-                            'detail_img' => '/image/pictures/booking/kertajaya/jaya.png',
-                            'price' => '150k',
-                            'delay' => '200'
-                        ],
-                        [
-                            'name' => 'Aula BOE',
-                            'desc' => 'Ruang serbaguna modern untuk seminar, rapat besar, dan acara sosial berskala nasional.',
-                            'long_desc' => 'Aula serbaguna dengan kapasitas besar, dilengkapi sistem audio visual mutakhir dan pencahayaan LED yang merata.',
-                            'img' => '/image/pictures/booking/aula/au.png',
-                            'detail_img' => '/image/pictures/booking/aula/la.png',
-                            'price' => '500k',
-                            'delay' => '300'
-                        ]
-                    ];
-                @endphp
-
-                @foreach($facilities as $item)
-                <div data-aos="fade-up" data-aos-delay="{{ $item['delay'] }}" 
+                {{-- Loop langsung dari database --}}
+                @foreach($facilities as $index => $item)
+                <div data-aos="fade-up" data-aos-delay="{{ ($index + 1) * 100 }}" 
                     class="group bg-white rounded-[2.5rem] p-4 shadow-[0_15px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_30px_60px_rgba(29,111,165,0.12)] transition-all duration-500 flex flex-col border border-transparent hover:border-blue-100/50">
                     
                     {{-- Card Image --}}
                     <div class="relative h-64 w-full overflow-hidden rounded-[2rem]">
-                        {{-- Overlay on Hover --}}
                         <div class="absolute inset-0 bg-[#1d6fa5]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
                         
-                        <img src="{{ $item['img'] }}" alt="{{ $item['name'] }}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out">
+                        {{-- Gunakan asset storage untuk gambar --}}
+                        <img src="{{ asset('storage/fasilitas/' . $item->image) }}" alt="{{ $item->nama }}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out">
                         
                         {{-- Price Tag --}}
                         <div class="absolute top-5 right-5 z-20">
                             <div class="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl">
                                 <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none mb-1">Mulai</p>
-                                <p class="text-lg font-black text-gray-900 leading-none">Rp {{ $item['price'] }}</p>
+                                {{-- Format harga otomatis --}}
+                                <p class="text-lg font-black text-gray-900 leading-none">Rp {{ number_format($item->harga, 0, ',', '.') }}</p>
                             </div>
                         </div>
                     </div>
@@ -391,43 +334,34 @@
                     {{-- Content --}}
                     <div class="px-3 py-6 flex flex-col flex-grow">
                         <h2 class="text-2xl font-black text-gray-800 tracking-tight mb-3">
-                            @if($item['name'] == 'Aula BOE')
-                                <span class="text-[#1d6fa5]">{{ $item['name'] }}</span>
+                            {{-- Logika Nama: Jika mengandung kata Aula tetap, jika tidak tambah kata Asrama --}}
+                            @if(str_contains(strtolower($item->nama), 'aula'))
+                                <span class="text-[#1d6fa5]">{{ $item->nama }}</span>
                             @else
-                                Asrama <span class="text-[#1d6fa5]">{{ $item['name'] }}</span>
+                                <span class="text-[#1d6fa5]">{{ $item->nama }}</span>
                             @endif
                         </h2>
                         
                         <p class="text-gray-500 text-sm leading-relaxed mb-8 line-clamp-2">
-                            {{ $item['desc'] }}
+                            {{ $item->deskripsi }}
                         </p>
 
                         {{-- Actions --}}
                         <div class="mt-auto flex items-center gap-3">
+                            {{-- Kirim data ke modal detail --}}
                             <button 
-                                onclick="openDescription('{{ $item['name'] }}', '{{ $item['long_desc'] }}', '{{ $item['detail_img'] }}')"
+                                onclick="openDescription('{{ $item->nama }}', '{{ $item->deskripsi }}', '{{ asset('storage/fasilitas/' . $item->image) }}')"
                                 class="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold text-xs transition-all duration-200 active:scale-95 border border-gray-100"
                             >
                                 Lihat Detail
                             </button>
                             
-                            <a href="/formBooking" 
-                            id="bookingBtn"
-                            class="relative flex-[1.2] bg-[#1d6fa5] hover:bg-slate-900 text-white py-4 rounded-2xl font-bold text-xs transition-all duration-300 shadow-lg flex items-center justify-center gap-2 group/btn overflow-hidden">
-                                
-                                <div id="btnContent" class="flex items-center justify-center gap-2 transition-all duration-300">
-                                    <span id="btnText">Book Now</span>
-                                    <svg id="arrowIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                    </svg>
-                                </div>
-
-                                <div id="loadingContainer" class="absolute inset-0 hidden items-center justify-center bg-inherit">
-                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                </div>
+                            <a href="{{ route('formBooking', ['id' => $item->id]) }}" 
+                                class="relative flex-[1.2] bg-[#1d6fa5] hover:bg-slate-900 text-white py-4 rounded-2xl font-bold text-xs transition-all duration-300 shadow-lg flex items-center justify-center gap-2 group/btn overflow-hidden">
+                                <span>Book Now</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
                             </a>
                         </div>
                     </div>

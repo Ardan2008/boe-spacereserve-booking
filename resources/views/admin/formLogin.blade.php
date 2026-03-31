@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Admin</title>
-    <link rel="icon" href="/image/logo/tutwuri-logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -43,6 +42,10 @@
             from { transform: translate(-20px, -20px); }
             to { transform: translate(60px, 40px); }
         }
+
+        .input-focus-ring:focus {
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -65,10 +68,11 @@
                 <p class="text-slate-500 text-sm mt-2 font-medium">Sistem Keamanan Otomatis Aktif</p>
             </div>
 
-            <form id="staticLoginForm" class="space-y-6" onsubmit="return false;">
+            <form action="{{ route('admin.login') }}" method="POST" class="space-y-6">
+                @csrf
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-500 ml-1 uppercase tracking-widest">Identitas Admin</label>
-                    <input id="userInput" type="text" placeholder="Masukkan Username" 
+                    <input id="userInput" name="username" placeholder="Masukkan Username" 
                             class="w-full px-7 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all text-base font-medium" required>
                 </div>
 
@@ -77,7 +81,7 @@
                         <label class="text-xs font-bold text-slate-500 uppercase tracking-widest">Kata Sandi</label>
                     </div>
                     <div class="relative">
-                        <input id="pwInput" type="password" placeholder="••••••••" 
+                        <input id="pwInput" name="password" type="password" placeholder="••••••••" 
                             class="w-full px-7 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all text-base font-medium" required>
                         
                         <div id="capsLockAlert" class="absolute right-5 top-1/2 -translate-y-1/2 hidden">
@@ -96,10 +100,11 @@
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </div>
+
                         <span class="btn-text-cancel inline-block transition-all duration-300">Batal</span>
                     </button>
 
-                    <button type="button" id="btnLogin" onclick="processLogin()" disabled
+                    <button type="button" id="btnLogin" onclick="processLogin()" 
                         class="flex-1 relative py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl opacity-50 cursor-not-allowed transition-all active:scale-[0.98] text-xs tracking-widest uppercase text-center overflow-hidden">
                         
                         <div class="loader-container absolute inset-0 flex items-center justify-center opacity-0 translate-y-4 transition-all duration-300">
@@ -108,6 +113,7 @@
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </div>
+
                         <span class="btn-text inline-block transition-all duration-300">Masuk Sistem</span>
                     </button>
                 </div>
@@ -119,8 +125,9 @@
         </p>
     </div>
 
-    <div id="cancelModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md opacity-0 invisible transition-all duration-300">
-        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl transform transition-all scale-95 duration-300">
+    {{-- tombol batal --}}
+    <div id="cancelModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md opacity-0 invisible">
+        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl transform transition-all scale-95">
             <div class="text-center">
                 <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-50 mb-6">
                     <svg class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -130,15 +137,16 @@
                 <h3 class="text-2xl font-bold text-slate-800 mb-2">Konfirmasi Batal</h3>
                 <p class="text-slate-500 text-sm mb-10 leading-relaxed">Apakah Anda yakin ingin membatalkan proses login ini?</p>
                 <div class="flex flex-col gap-3">
-                    <button onclick="handleActualCancel(this)" class="w-full py-4 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 shadow-lg shadow-red-200 transition-all text-xs tracking-widest uppercase">
+                    <button onclick="handleActualCancel()" class="w-full py-4 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 shadow-lg shadow-red-200 transition-all text-xs tracking-widest uppercase">
                         Ya, Batal
                     </button>
-                    <button onclick="hideModal('cancelModal')" class="w-full py-4 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all text-xs tracking-widest uppercase">Tidak, Kembali</button>
+                    <button onclick="hideCancelModal()" class="w-full py-4 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all text-xs tracking-widest uppercase">Tidak, Kembali</button>
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- tombol masuk --}}
     <div id="confirmLoginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md opacity-0 invisible transition-all duration-300">
         <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl transform transition-all scale-95 duration-300">
             <div class="text-center">
@@ -149,162 +157,177 @@
                 </div>
                 <h3 class="text-2xl font-bold text-slate-800 mb-2">Verifikasi Data</h3>
                 <p class="text-slate-500 text-sm mb-10 leading-relaxed">Apakah Anda yakin data yang dimasukkan sudah benar?</p>
-                <div id="errorMessage" class="text-red-500 text-xs mb-4 hidden"></div>
                 <div class="flex flex-col gap-3">
                     <button onclick="finalSubmit(this)" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:shadow-xl hover:shadow-blue-500/40 transition-all text-xs tracking-widest uppercase text-center flex items-center justify-center">
                         Ya, Masuk Sekarang
                     </button>
-                    <button onclick="hideModal('confirmLoginModal')" class="w-full py-4 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all text-xs tracking-widest uppercase">Cek Kembali</button>
+                    <a href="javascript:void(0)" onclick="hideModal('confirmLoginModal')" class="w-full py-4 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all text-xs tracking-widest uppercase text-center inline-block">Cek Kembali</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-        const pwInput = document.getElementById('pwInput');
-        const capsAlert = document.getElementById('capsLockAlert');
-        const userInput = document.getElementById('userInput');
-        const loginBtn = document.getElementById('btnLogin');
-        let hideTimeout;
+    const pwInput = document.getElementById('pwInput');
+    const capsAlert = document.getElementById('capsLockAlert');
+    const userInput = document.getElementById('userInput');
+    const loginBtn = document.getElementById('btnLogin');
+    let hideTimeout;
 
-        // Validasi Form
-        function validateForm() {
-            const isUserFilled = userInput.value.trim().length > 0;
-            const isPwFilled = pwInput.value.trim().length > 0;
-
-            if (isUserFilled && isPwFilled) {
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                loginBtn.classList.add('hover:shadow-xl', 'hover:shadow-blue-500/40');
-            } else {
-                loginBtn.disabled = true;
-                loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                loginBtn.classList.remove('hover:shadow-xl', 'hover:shadow-blue-500/40');
-            }
+    // --- FUNGSI BARU: RESET ERROR ---
+    function resetError() {
+        const errorDiv = document.querySelector('.login-error');
+        if (errorDiv) {
+            errorDiv.remove(); // Menghapus elemen error dari DOM
         }
+    }
 
-        userInput.addEventListener('input', validateForm);
-        pwInput.addEventListener('input', validateForm);
+    function validateForm() {
+        // Setiap kali user mengetik, kita hapus pesan error yang lama
+        resetError(); 
 
-        // Preview Password Otomatis
-        pwInput.addEventListener('input', () => {
-            pwInput.type = 'text';
-            clearTimeout(hideTimeout);
-            hideTimeout = setTimeout(() => {
-                pwInput.type = 'password';
-            }, 800);
-        });
+        const isUserFilled = userInput.value.trim().length > 0;
+        const isPwFilled = pwInput.value.trim().length > 0;
 
-        // Deteksi Caps Lock
-        pwInput.addEventListener('keyup', (e) => {
-            if (e.getModifierState('CapsLock')) {
-                capsAlert.classList.remove('hidden');
-            } else {
-                capsAlert.classList.add('hidden');
-            }
-        });
+        if (isUserFilled && isPwFilled) {
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            loginBtn.classList.add('hover:shadow-xl', 'hover:shadow-blue-500/40');
+        } else {
+            loginBtn.disabled = true;
+            loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            loginBtn.classList.remove('hover:shadow-xl', 'hover:shadow-blue-500/40');
+        }
+    }
 
-        // Modal Utility
-        function showModal(id) {
-            const modal = document.getElementById(id);
+    userInput.addEventListener('input', validateForm);
+    pwInput.addEventListener('input', validateForm);
+
+    // Logika Password Peek (Intip)
+    pwInput.addEventListener('input', () => {
+        pwInput.type = 'text';
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
+            pwInput.type = 'password';
+        }, 800);
+    });
+
+    // Deteksi Caps Lock
+    pwInput.addEventListener('keyup', (e) => {
+        e.getModifierState('CapsLock') ? capsAlert.classList.remove('hidden') : capsAlert.classList.add('hidden');
+    });
+
+    // Modal Utility
+    function showModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
             modal.classList.remove('invisible', 'opacity-0');
-            modal.querySelector('div').classList.replace('scale-95', 'scale-100');
+            modal.classList.add('opacity-100');
+            const content = modal.querySelector('div');
+            if (content) content.classList.replace('scale-95', 'scale-100');
         }
+    }
 
-        function hideModal(id) {
-            const modal = document.getElementById(id);
+    function hideModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            // Reset error saat modal ditutup agar tidak muncul lagi saat dibuka nanti
+            resetError(); 
             modal.classList.add('opacity-0');
-            modal.querySelector('div').classList.replace('scale-100', 'scale-95');
+            const content = modal.querySelector('div');
+            if (content) content.classList.replace('scale-100', 'scale-95');
             setTimeout(() => modal.classList.add('invisible'), 300);
         }
+    }
 
-        // Proses Login Utama
-        function processLogin() {
-            const btn = document.getElementById('btnLogin');
-            const text = btn.querySelector('.btn-text');
-            const loader = btn.querySelector('.loader-container');
+    function processLogin() {
+        if (userInput.value.trim() === "" || pwInput.value.trim() === "") return;
+        
+        const btn = document.getElementById('btnLogin');
+        const text = btn.querySelector('.btn-text');
+        const loader = btn.querySelector('.loader-container');
 
-            text.classList.add('opacity-0', '-translate-y-4');
-            loader.classList.remove('opacity-0', 'translate-y-4');
-            btn.classList.add('pointer-events-none', 'brightness-90');
+        text.classList.add('opacity-0', '-translate-y-4');
+        loader.classList.remove('opacity-0', 'translate-y-4');
+        btn.classList.add('pointer-events-none', 'brightness-90');
 
+        setTimeout(() => {
+            showModal('confirmLoginModal');
             setTimeout(() => {
-                showModal('confirmLoginModal');
-                setTimeout(() => {
-                    text.classList.remove('opacity-0', '-translate-y-4');
-                    loader.classList.add('opacity-0', 'translate-y-4');
-                    btn.classList.remove('pointer-events-none', 'brightness-90');
-                }, 500);
-            }, 800);
-        }
-
-        // Final Submit (Simulasi)
-        function finalSubmit(el) {
-            el.innerHTML = `
-                <svg class="animate-spin h-4 w-4 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                MEMPROSES...
-            `;
-            el.classList.add('pointer-events-none', 'opacity-80');
-
-            setTimeout(() => {
-                hideModal('confirmLoginModal'); 
-
-                Swal.fire({
-                    title: 'Akses Diterima!',
-                    text: 'Identitas admin terverifikasi. Mengalihkan ke dashboard...',
-                    icon: 'success',
-                    iconColor: '#22c55e', 
-                    showConfirmButton: false,
-                    timer: 2000,
-                    timerProgressBar: true,
-                    background: '#ffffff',
-                    color: '#1e293b',
-                    willOpen: () => {
-                        // Mengubah warna progress bar secara dinamis
-                        const progressBar = Swal.getTimerProgressBar();
-                        if (progressBar) {
-                            progressBar.style.backgroundColor = '#22c55e';
-                        }
-                    },
-                    customClass: {
-                        popup: 'rounded-[2rem] p-8',
-                        title: 'text-2xl font-bold pt-4 text-slate-800',
-                        htmlContainer: 'text-slate-500 font-medium'
-                    }
-                }).then(() => {
-                    window.location.href = '/admin/dashboard/master';
-                });
-            }, 1500);
-        }
-
-        // Proses Batal
-        function processCancel() {
-            const btn = document.getElementById('btnCancel');
-            const text = btn.querySelector('.btn-text-cancel');
-            const loader = btn.querySelector('.loader-container-cancel');
-
-            text.classList.add('opacity-0', '-translate-y-4');
-            loader.classList.remove('opacity-0', 'translate-y-4');
-            
-            setTimeout(() => {
-                showModal('cancelModal');
                 text.classList.remove('opacity-0', '-translate-y-4');
                 loader.classList.add('opacity-0', 'translate-y-4');
-            }, 600);
+                btn.classList.remove('pointer-events-none', 'brightness-90');
+            }, 500);
+        }, 800);
+    }
+
+    function finalSubmit(el) {
+        resetError(); // Bersihkan error sebelum kirim request baru
+        const loginForm = document.querySelector('form');
+        const formData = new FormData(loginForm);
+
+        el.innerHTML = `
+            <svg class="animate-spin h-4 w-4 text-white inline mr-2" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> MEMPROSES...`;
+        el.classList.add('pointer-events-none', 'opacity-80');
+
+        fetch(loginForm.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                'Accept': 'application/json',
+            },
+            body: formData
+        })
+        .then(async response => {
+            const data = await response.json();
+            if (response.ok && data.success) {
+                window.location.href = data.redirect;
+            } else {
+                showLoginError(data);
+                el.innerHTML = "Ya, Masuk Sekarang";
+                el.classList.remove('pointer-events-none', 'opacity-80');
+            }
+        })
+        .catch(err => {
+            console.error('Login error:', err);
+            el.innerHTML = "Ya, Masuk Sekarang";
+            el.classList.remove('pointer-events-none', 'opacity-80');
+        });
+    }
+
+    function showLoginError(data) {
+        const modal = document.getElementById('confirmLoginModal');
+        let errorDiv = modal.querySelector('.login-error');
+
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.classList.add('login-error', 'text-red-500', 'text-xs', 'font-bold', 'mb-4', 'bg-red-50', 'py-2', 'rounded-xl', 'border', 'border-red-100');
+            modal.querySelector('.text-center p').after(errorDiv); // Letakkan setelah paragraf instruksi
         }
 
-        function handleActualCancel(el) {
-            el.innerHTML = "MEMBATALKAN...";
-            el.classList.add('pointer-events-none', 'opacity-80');
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 800);
+        // Ambil pesan error dari backend
+        if (data.errors) {
+            const firstError = Object.values(data.errors)[0][0];
+            errorDiv.textContent = firstError;
+        } else if (data.message) {
+            errorDiv.textContent = data.message;
+        } else {
+            errorDiv.textContent = 'Identitas tidak ditemukan!';
         }
-    </script>
+    }
+
+    // Fungsi Batal
+    function processCancel() { showModal('cancelModal'); }
+    function hideCancelModal() { hideModal('cancelModal'); }
+    function handleActualCancel() {
+        const btnConfirm = event.target;
+        btnConfirm.innerHTML = "MEMBATALKAN...";
+        btnConfirm.classList.add('pointer-events-none', 'opacity-80');
+        setTimeout(() => { window.location.href = '/'; }, 800);
+    }
+</script>
 </body>
 </html>

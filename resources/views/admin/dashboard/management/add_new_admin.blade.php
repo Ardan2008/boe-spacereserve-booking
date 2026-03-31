@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/image/logo/tutwuri-logo.svg">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>BOE-Space Reserve | Add New Admin</title>
+    <link rel="icon" href="/image/logo/tutwuri-logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -94,7 +95,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="input-group space-y-2">
                     <label class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block ml-1">Nama Lengkap</label>
-                    <input type="text" placeholder="John Doe" 
+                    <input name="nama" type="text" placeholder="John Doe" 
                         class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium input-glow" required>
                 </div>
 
@@ -102,7 +103,7 @@
                     <label class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block ml-1">Username</label>
                     <div class="relative">
                         <span class="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 font-bold">@</span>
-                        <input type="text" placeholder="username" 
+                        <input name="username" type="text" placeholder="username" 
                             class="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium input-glow" required>
                     </div>
                 </div>
@@ -111,13 +112,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="input-group space-y-2">
                     <label class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block ml-1">Password</label>
-                    <input id="passInput" type="password" placeholder="••••••••" 
+                    <input name="password" id="passInput" type="password" placeholder="••••••••" 
                         class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium input-glow" required>
                 </div>
 
                 <div class="input-group space-y-2">
                     <label class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block ml-1">Konfirmasi</label>
-                    <input id="confirmInput" type="password" placeholder="••••••••" 
+                    <input name="password_confirmation" id="confirmInput" type="password" placeholder="••••••••" 
                         class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium input-glow" required>
                 </div>
             </div>
@@ -188,7 +189,12 @@
 
             // Validasi kecocokan password sebelum lanjut
             if (pass !== confirmPass) {
-                alert("Konfirmasi password tidak cocok!");
+                showDynamicError("Konfirmasi password tidak cocok.");
+                return;
+            }
+
+            if (pass.length < 6) {
+                showDynamicError("Password minimal 6 karakter.");
                 return;
             }
 
@@ -213,9 +219,8 @@
             showModal();
         }
 
-        // Fungsi Eksekusi & Animasi Sedang Memproses
         function eksekusiPendaftaran() {
-            hideModal(); // Tutup modal konfirmasi
+            hideModal();
 
             const btn = document.getElementById('btnTambah');
             const btnText = document.getElementById('btnText');
@@ -227,21 +232,55 @@
             btnText.innerText = "Memproses...";
             btnLoading.classList.remove('hidden');
 
-            // Simulasi pengiriman data ke server
-            setTimeout(() => {
-                // Efek Outro Form
-                document.getElementById('adminForm').style.opacity = "0.3";
-                document.getElementById('adminForm').style.filter = "blur(4px)";
-                document.getElementById('adminForm').style.transition = "all 0.8s ease";
+            // Ambil data form
+            const formData = new FormData(document.getElementById('adminForm'));
 
-                // Overlay Sukses
-                overlay.classList.remove('hidden');
-                setTimeout(() => { 
-                    overlay.classList.add('opacity-100'); 
-                }, 50);
-            }, 2000); 
-        }
+            fetch("{{ route('admin.store') }}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) {
+                    throw data;
+                }
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('adminForm').style.opacity = "0.3";
+                    overlay.classList.remove('hidden');
+                    setTimeout(() => { overlay.classList.add('opacity-100'); }, 50);
+                }
+            })
+            .catch(err => {
+                console.log(err);
 
+                let messages = "";
+
+                if (err.errors) {
+                    Object.values(err.errors).forEach(msgArr => {
+                        msgArr.forEach(msg => {
+                            messages += "• " + msg + "<br>";
+                        });
+                    });
+                } else if (err.message) {
+                    messages = err.message;
+                } else {
+                    messages = "Terjadi kesalahan pada server.";
+                }
+
+                showDynamicError(messages);
+
+                btn.disabled = false;
+                btnText.innerText = "Daftarkan";
+                btnLoading.classList.add('hidden');
+            });
+          }
         // Fungsi Navigasi Pintar (Untuk Tombol Batal & Selesai)
         function handleBackNavigation() {
             const btnYaBatal = document.getElementById('btnYaBatal');
@@ -287,6 +326,73 @@
                 input.timeout = setTimeout(() => { input.type = 'password'; }, 700);
             });
         });
+
+        function showDynamicError(message) {
+
+    // Hapus jika sudah ada
+    const old = document.getElementById("dynamicError");
+    if (old) old.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "dynamicError";
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.background = "rgba(15,23,42,0.5)";
+    overlay.style.backdropFilter = "blur(6px)";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.zIndex = "9999";
+    overlay.style.opacity = "0";
+    overlay.style.transition = "0.3s";
+
+    const box = document.createElement("div");
+    box.style.background = "white";
+    box.style.padding = "40px";
+    box.style.borderRadius = "30px";
+    box.style.width = "380px";
+    box.style.maxWidth = "90%";
+    box.style.boxShadow = "0 25px 60px rgba(0,0,0,0.15)";
+    box.style.transform = "scale(0.9)";
+    box.style.transition = "0.3s";
+    box.style.textAlign = "center";
+
+    box.innerHTML = `
+        <div style="width:70px;height:70px;background:#fee2e2;color:#dc2626;
+            display:flex;align-items:center;justify-content:center;
+            border-radius:25px;margin:0 auto 20px auto;font-size:28px;">
+            !
+        </div>
+
+        <h3 style="font-size:22px;font-weight:800;margin-bottom:10px;color:#0f172a;">
+            Validasi Gagal
+        </h3>
+
+        <div style="font-size:14px;color:#475569;margin-bottom:25px;">
+            ${message}
+        </div>
+
+        <button id="closeDynamicError"
+            style="width:100%;padding:14px;border-radius:18px;
+            background:#ef4444;color:white;font-weight:700;border:none;cursor:pointer;">
+            Mengerti
+        </button>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    setTimeout(() => {
+        overlay.style.opacity = "1";
+        box.style.transform = "scale(1)";
+    }, 10);
+
+    document.getElementById("closeDynamicError").onclick = () => {
+        overlay.style.opacity = "0";
+        box.style.transform = "scale(0.9)";
+        setTimeout(() => overlay.remove(), 300);
+    };
+}
     </script>
 </body>
 </html>

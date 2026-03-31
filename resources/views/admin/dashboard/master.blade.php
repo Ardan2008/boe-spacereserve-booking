@@ -365,9 +365,10 @@
                     label: 'Tingkat Okupansi',
                     data: [10, 25, 20, 35, 30, 45, 50, 40, 60, 75, 80, 95],
                     borderColor: '#1265A8',
-                    backgroundColor: 'rgba(18, 101, 168, 0.1)',
+                    backgroundColor: '#ffffff',
                     fill: true,
                     tension: 0.4
+                    
                 }]
             },
             options: { 
