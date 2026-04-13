@@ -8,6 +8,7 @@
     <link rel="icon" href="/image/logo/tutwuri-logo.svg">
     <title>BOE-Space Reserve | Admin Dashboard</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
@@ -96,12 +97,9 @@
                         <select name="lapangan_id" id="filterLapangan"
                             class="pl-4 pr-10 py-2.5 bg-slate-50 border-none rounded-2xl text-xs font-bold text-slate-700 appearance-none focus:ring-2 focus:ring-[#1265A8]/20 transition-all cursor-pointer shadow-inner min-w-[180px]">
                             <option value="">Semua Fasilitas</option>
-                            <option value="1">Asrama Tunggul Ametung</option>
-                            <option value="2">Asrama Ken Umang</option>
-                            <option value="3">Asrama Kendedes</option>
-                            <option value="4">Asrama Ken Arok</option>
-                            <option value="5">Asrama Kertajaya</option>
-                            <option value="6">Aula BOE</option>
+                            @foreach($facilities as $f)
+                            <option value="{{ $f->id }}">{{ $f->nama }}</option>
+                            @endforeach
                         </select>
                         <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2.5"></path></svg>
@@ -114,6 +112,7 @@
                 </form>
             </div>
 
+            @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
             <div class="flex items-center gap-4">
                 <label class="flex items-center gap-3 cursor-pointer group bg-slate-50 px-4 py-2 rounded-2xl border border-transparent hover:border-slate-200 transition-all">
                     <span id="selectLabel" class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest group-hover:text-[#1265A8]">Pilih Semua</span>
@@ -131,6 +130,7 @@
                     </button>
                 </div>
             </div>
+            @endif
         </section>
 
         <div id="dataContainer"></div>
@@ -165,14 +165,7 @@
             let deleteCallback = null;
 
             // --- DATA UTAMA ---
-            let myData = [
-                { id: "10293", lapar_id: "1", nama: "Asrama Tunggul Ametung", tanggal: "2026-05-24", displayTanggal: "24 Mei 2026", hargaLama: "Rp 400.000", hargaBaru: "Rp 780.000", persen: "15%" },
-                { id: "10294", lapar_id: "2", nama: "Asrama Ken Umang", tanggal: "2026-05-25", displayTanggal: "25 Mei 2026", hargaLama: "Rp 359.000", hargaBaru: "Rp 2.200.000", persen: "10%" },
-                { id: "10295", lapar_id: "3", nama: "Asrama Kendedes", tanggal: "2026-05-26", displayTanggal: "26 Mei 2026", hargaLama: "Rp 500.000", hargaBaru: "Rp 600.000", persen: "20%" },
-                { id: "10296", lapar_id: "4", nama: "Asrama Ken Arok", tanggal: "2026-05-27", displayTanggal: "27 Mei 2026", hargaLama: "Rp 200.000", hargaBaru: "Rp 467.000", persen: "25%" },
-                { id: "10297", lapar_id: "5", nama: "Asrama Kertajaya", tanggal: "2026-05-28", displayTanggal: "28 Mei 2026", hargaLama: "Rp 246.000", hargaBaru: "Rp 578.000", persen: "35%" },
-                { id: "10298", lapar_id: "6", nama: "Aula BOE", tanggal: "2026-05-29", displayTanggal: "29 Mei 2026", hargaLama: "Rp 550.000", hargaBaru: "Rp 670.000", persen: "30%" },
-            ];
+            let myData = @json($histories);
 
             // --- RENDER ENGINE ---
             const renderData = (dataToRender) => {
@@ -195,6 +188,7 @@
                         <div class="data-card-hover glass-card rounded-[2.5rem] overflow-hidden transition-all duration-300">
                             <div class="px-8 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div class="flex items-center gap-6">
+                                    @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
                                     <div class="relative">
                                         <input type="checkbox" class="itemCheckbox peer hidden" id="cb-${item.id}">
                                         <label for="cb-${item.id}" class="w-6 h-6 border-2 border-slate-200 rounded-xl peer-checked:bg-[#1265A8] peer-checked:border-[#1265A8] flex items-center justify-center transition-all cursor-pointer shadow-sm">
@@ -203,6 +197,7 @@
                                             </svg>
                                         </label>
                                     </div>
+                                    @endif
                                     
                                     <div class="flex items-center gap-5">
                                         <div class="w-14 h-14 bg-gradient-to-br from-slate-50 to-slate-100 rounded-[1.25rem] flex items-center justify-center text-[#1265A8] border border-slate-200 shadow-sm transition-transform group-hover/card:rotate-3">
@@ -223,11 +218,13 @@
                                     </div>
                                 </div>
                                 
+                                @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
                                 <button class="delete-single p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all border border-transparent hover:border-red-100">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
                                 </button>
+                                @endif
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
@@ -267,11 +264,15 @@
             const applyFilters = () => {
                 const tglValue = document.getElementById('filterTanggal').value; 
                 const fslValue = document.getElementById('filterLapangan').value; 
+                const searchValue = (document.getElementById('globalSearch') || document.getElementById('dashboardSearch'))?.value.toLowerCase() || "";
 
                 const filtered = myData.filter(item => {
                     const matchTanggal = (tglValue === "") || (item.tanggal === tglValue);
                     const matchFasilitas = (fslValue === "") || (item.lapar_id === fslValue);
-                    return matchTanggal && matchFasilitas;
+                    const matchSearch = (searchValue === "") || 
+                                       (item.nama.toLowerCase().includes(searchValue)) || 
+                                       (item.id.toLowerCase().includes(searchValue));
+                    return matchTanggal && matchFasilitas && matchSearch;
                 });
 
                 renderData(filtered);
@@ -280,8 +281,12 @@
             // Pastikan event listener terpasang
             document.getElementById('filterTanggal').addEventListener('change', applyFilters);
             document.getElementById('filterLapangan').addEventListener('change', applyFilters);
+            (document.getElementById('globalSearch') || document.getElementById('dashboardSearch'))?.addEventListener('input', applyFilters);
+            
             document.getElementById('btnResetManual').addEventListener('click', () => {
                 document.getElementById('filterForm').reset();
+                const searchInput = (document.getElementById('globalSearch') || document.getElementById('dashboardSearch'));
+                if (searchInput) searchInput.value = "";
                 renderData(myData);
             });
 
@@ -359,6 +364,7 @@
             async function performDelete(ids, elements) {
                 const spinner = document.getElementById('deleteSpinner');
                 const btnText = document.getElementById('btnText');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
                 confirmDeleteBtn.disabled = true;
                 cancelBtn?.classList.add('opacity-0', 'pointer-events-none');
@@ -366,23 +372,44 @@
                 btnText.innerText = "Memproses...";
                 confirmDeleteBtn.classList.replace('bg-red-500', 'bg-slate-400');
 
-                await new Promise(r => setTimeout(r, 2000));
-                btnText.innerText = "Menghapus Data...";
-                await new Promise(r => setTimeout(r, 2000));
+                try {
+                    const response = await fetch(ids.length === 1 
+                        ? `/admin/dashboard/dataHargaSewa/delete/${ids[0]}` 
+                        : `/admin/dashboard/dataHargaSewa/bulk-delete`, {
+                        method: ids.length === 1 ? 'DELETE' : 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: ids.length === 1 ? null : JSON.stringify({ ids: ids })
+                    });
 
-                elements.forEach((el, i) => {
-                    setTimeout(() => {
-                        el.style.transform = 'translateX(100px) scale(0.9)'; 
-                        el.style.opacity = '0';
-                        setTimeout(() => el.remove(), 600);
-                    }, i * 150); 
-                });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        elements.forEach((el, i) => {
+                            setTimeout(() => {
+                                el.style.transform = 'translateX(100px) scale(0.9)'; 
+                                el.style.opacity = '0';
+                                setTimeout(() => el.remove(), 600);
+                            }, i * 150); 
+                        });
 
-                myData = myData.filter(item => !ids.includes(item.id));
-
-                await new Promise(r => setTimeout(r, 500));
-                hideModal();
-                showToast(`${ids.length} data berhasil dibersihkan.`);
+                        myData = myData.filter(item => !ids.includes(item.id));
+                        
+                        await new Promise(r => setTimeout(r, 500));
+                        hideModal();
+                        showToast(`${ids.length} data berhasil dibersihkan.`);
+                    } else {
+                        showToast('Gagal menghapus data.');
+                        hideModal();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan sistem.');
+                    hideModal();
+                }
 
                 setTimeout(() => {
                     confirmDeleteBtn.disabled = false;

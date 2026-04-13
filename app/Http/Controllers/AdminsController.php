@@ -7,6 +7,7 @@ use App\Models\Admins;
 use App\Models\Fasilitas;
 use App\Models\Booking;
 use App\Models\Penyewa;
+use App\Models\HargaSewaHistory;
 
 class AdminsController extends Controller
 {
@@ -23,10 +24,27 @@ class AdminsController extends Controller
 
         // Cek username & password (tanpa hash)
         if ($admin && $request->password === $admin->password) {
+            
+            // CEK PERSISTENT FORCE LOGOUT (BANNED/BLOCKED BY OWNER)
+            if ($admin->force_logout && $admin->logout_type === 'manual') {
+                return response()->json([
+                    'success' => false,
+                    'errors' => [
+                        'login' => ['Anda telah dikeluarkan paksa dari sistem oleh owner, silakan hubungi owner.']
+                    ]
+                ], 401);
+            }
+
+            // Jika logout karena update, izinkan login kembali dan reset status
+            if ($admin->force_logout && $admin->logout_type === 'update') {
+                $admin->update(['force_logout' => false, 'logout_type' => null]);
+            }
+
             // Simpan session
             $request->session()->put('id_log', $admin->id_log);
             $request->session()->put('nama', $admin->nama);
-
+            $request->session()->put('role', $admin->role);
+            $request->session()->put('can_edit', $admin->can_edit);
 
             return response()->json([
                 'success' => true,
@@ -44,7 +62,13 @@ class AdminsController extends Controller
 
     public function logout(Request $request)
     {
-        $request->session()->forget(['id_log', 'nama']);
+        if ($request->session()->has('id_log')) {
+            $admin = Admins::find($request->session()->get('id_log'));
+            if ($admin) {
+                $admin->update(['force_logout' => false]);
+            }
+        }
+        $request->session()->forget(['id_log', 'nama', 'role', 'can_edit']);
         $request->session()->flush();
 
         return redirect()->route('login');
@@ -52,16 +76,25 @@ class AdminsController extends Controller
 
     public function store(Request $request)
     {
+        if (session('role') !== 'owner') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'nama' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:admins,username',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6',
         ]);
+
+        $can_edit = $request->has('can_edit') ? filter_var($request->can_edit, FILTER_VALIDATE_BOOLEAN) : false;
 
         $admin = Admins::create([
             'nama' => $request->nama,
             'username' => $request->username,
             'password' => $request->password,
+            'role' => 'admin',
+            'can_edit' => $can_edit,
+            'force_logout' => false
         ]);
 
         return response()->json([
@@ -118,7 +151,8 @@ class AdminsController extends Controller
         // 1. Ambil Data Statistik untuk Summary Card
         $totalFasilitas = Fasilitas::count();
         $totalBooking = Booking::count();
-        $totalPenyewa = Penyewa::count();
+        // Hitung total booking yang sudah di-approve sebagai representasi rekap data penyewa
+        $totalPenyewa = Booking::where('status', 'confirmed')->count();
 
         // 2. Ambil data untuk Chart Fasilitas
         $fasilitas = Fasilitas::withCount('booking')->get();
@@ -152,5 +186,253 @@ class AdminsController extends Controller
     {
         $admin = Admins::findOrFail($id_log);
         return view('admin.dashboard.management.view_admin', compact('admin'));
+    }
+
+    // Role Management Methods
+    public function updatePermissions(Request $request, $id_log)
+    {
+        if (session('role') !== 'owner') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $admin = Admins::findOrFail($id_log);
+        
+        // Prevent editing another owner's permissions unless specifically needed, but we allow it for now.
+        $can_edit = filter_var($request->can_edit, FILTER_VALIDATE_BOOLEAN);
+        $admin->update(['can_edit' => $can_edit]);
+
+        // Trigger auto-logout for the updated admin (if not self)
+        if ($admin->id_log != session('id_log')) {
+            $admin->update(['force_logout' => true, 'logout_type' => 'update']);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Permissions updated successfully.']);
+    }
+
+    public function promoteToOwner($id_log)
+    {
+        if (session('role') !== 'owner') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $admin = Admins::findOrFail($id_log);
+        $admin->update(['role' => 'owner', 'can_edit' => true]);
+
+        // Trigger auto-logout for the updated admin (if not self)
+        if ($admin->id_log != session('id_log')) {
+            $admin->update(['force_logout' => true, 'logout_type' => 'update']);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Admin promoted to Owner successfully.']);
+    }
+
+    public function forceLogoutAdmin($id_log)
+    {
+        if (session('role') !== 'owner') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $admin = Admins::findOrFail($id_log);
+        // Kita tidak menendang owner utama dari dirinya sendiri
+        if ($admin->id_log == session('id_log')) {
+             return response()->json(['success' => false, 'message' => 'Cannot logout yourself from here.']);
+        }
+        
+        $newStatus = !$admin->force_logout;
+        $admin->update([
+            'force_logout' => $newStatus,
+            'logout_type' => $newStatus ? 'manual' : null
+        ]);
+
+        $msg = $newStatus ? 'Admin has been Force Logged Out and Blocked.' : 'Admin is now allowed to Login Back.';
+        return response()->json(['success' => true, 'message' => $msg, 'force_logout' => $newStatus]);
+    }
+
+    public function destroyAdmin($id_log)
+    {
+        if (session('role') !== 'owner') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $admin = Admins::findOrFail($id_log);
+        
+        // Prevent deleting oneself
+        if ($admin->id_log == session('id_log')) {
+             return response()->json(['success' => false, 'message' => 'Cannot delete your own account.']);
+        }
+
+        $admin->delete();
+
+        return response()->json(['success' => true, 'message' => 'Admin account deleted permanently.']);
+    }
+
+    public function updateAdminCredentials(Request $request, $id_log)
+    {
+        if (session('role') !== 'owner') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:admins,username,'.$id_log.',id_log',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $admin = Admins::findOrFail($id_log);
+        $admin->nama = $request->nama;
+        $admin->username = $request->username;
+        
+        if ($request->filled('password')) {
+            $admin->password = $request->password;
+        }
+
+        // Only update can_edit if it's an admin role (owner always has full access)
+        if ($admin->role === 'admin' && $request->has('can_edit')) {
+            $admin->can_edit = filter_var($request->can_edit, FILTER_VALIDATE_BOOLEAN);
+        }
+        
+        $admin->save();
+
+        // Trigger auto-logout for the updated admin (if not self)
+        if ($admin->id_log != session('id_log')) {
+            $admin->update(['force_logout' => true, 'logout_type' => 'update']);
+        } else {
+            // Update current session if self
+            session(['nama' => $admin->nama]);
+        }
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Akun berhasil diperbarui.',
+            'admin' => $admin
+        ]);
+    }
+
+    public function dataHargaSewa(Request $request)
+    {
+        $query = HargaSewaHistory::with('fasilitas')->orderBy('created_at', 'desc');
+
+        // Filter Tanggal
+        if ($request->filled('tanggal')) {
+            $query->whereDate('created_at', $request->tanggal);
+        }
+
+        // Filter Fasilitas (lapangan_id from UI select)
+        if ($request->filled('lapangan_id')) {
+            $query->where('fasilitas_id', $request->lapangan_id);
+        }
+
+        // Filter Search (Manual Typo)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('fasilitas', function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%");
+            });
+        }
+
+        $histories = $query->get()->map(function($h) {
+            return [
+                'id' => (string)$h->id,
+                'lapar_id' => (string)$h->fasilitas_id,
+                'nama' => $h->fasilitas->nama ?? 'Unknown',
+                'tanggal' => $h->created_at->format('Y-m-d'),
+                'displayTanggal' => $h->created_at->translatedFormat('d F Y'),
+                'hargaLama' => 'Rp ' . number_format($h->harga_lama, 0, ',', '.'),
+                'hargaBaru' => 'Rp ' . number_format($h->harga_baru, 0, ',', '.'),
+                'persen' => $h->persen_perubahan
+            ];
+        });
+
+        $facilities = Fasilitas::all();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'histories' => $histories,
+                'facilities' => $facilities
+            ]);
+        }
+
+        return view('admin.dashboard.dataHargaSewa', compact('histories', 'facilities'));
+    }
+
+    public function destroyHargaSewa($id)
+    {
+        $history = HargaSewaHistory::findOrFail($id);
+        $history->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function dataPenyewa(Request $request)
+    {
+        // Tampilkan semua riwayat booking yang sudah di-approve (confirmed)
+        $query = Booking::where('status', 'confirmed')
+            ->has('penyewa') // Pastikan penyewa ada untuk menghindari error null pointer
+            ->with(['penyewa', 'fasilitas'])
+            ->orderBy('updated_at', 'desc');
+
+        // Text Search (Nama, Email, WhatsApp dari relasi Penyewa)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('penyewa', function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('whatsapp', 'like', "%{$search}%");
+            });
+        }
+
+        // Facility Filter khusus untuk booking yang difokuskan pada fasilitas tertentu
+        if ($request->filled('facility') && $request->facility !== 'all') {
+            $facilityName = $request->facility;
+            $query->whereHas('fasilitas', function($q) use ($facilityName) {
+                $q->where('nama', $facilityName);
+            });
+        }
+
+        $penyewas = $query->get();
+        $facilities = Fasilitas::all();
+
+        return view('admin.dashboard.dataPenyewa', compact('penyewas', 'facilities'));
+    }
+
+    public function detailPenyewa(Request $request)
+    {
+        $id = $request->id;
+        // Memuat penyewa beserta riwayat booking dan fasilitas terkaitnya
+        $penyewa = Penyewa::with(['bookings' => function($q) {
+            $q->orderBy('created_at', 'desc');
+        }, 'bookings.fasilitas'])->findOrFail($id);
+        
+        return view('admin.dashboard.detail.detailPenyewa', compact('penyewa'));
+    }
+
+    public function destroyPenyewa($id)
+    {
+        // Temukan dan hapus booking spesifik dari riwayat rekap
+        $booking = Booking::findOrFail($id);
+        $booking->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function bulkDestroyPenyewa(Request $request)
+    {
+        $ids = $request->ids;
+        if (!empty($ids)) {
+            // Hapus banyak booking sekaligus dari riwayat
+            Booking::whereIn('id', $ids)->delete();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function bulkDestroyHargaSewa(Request $request)
+    {
+        $ids = $request->ids;
+        if (!empty($ids)) {
+            HargaSewaHistory::whereIn('id', $ids)->delete();
+        }
+
+        return response()->json(['success' => true]);
     }
 }

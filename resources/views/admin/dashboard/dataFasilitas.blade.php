@@ -108,6 +108,7 @@
                     </div>
                 </div>
 
+                @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
                 <a href="/admin/dashboard/create/createFasilitas" id="btnTambah" onclick="handleLoading(event, this)" class="group relative inline-flex items-center gap-2 px-8 py-3.5 bg-[#1265A8] text-white rounded-2xl font-bold text-sm transition-all duration-300 hover:bg-[#0d4d82] hover:shadow-[0_10px_20px_-10px_rgba(18,101,168,0.5)] active:scale-95 overflow-hidden">
                     <div class="absolute inset-0 w-1/2 h-full bg-white/10 skew-x-[-25deg] -translate-x-full group-hover:animate-[shimmer_0.75s_infinite]"></div>
                     
@@ -125,6 +126,7 @@
                         <span id="btnText">Tambah Fasilitas</span>
                     </div>
                 </a>
+                @endif
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -133,7 +135,7 @@
                     
                     {{-- Bagian Gambar dengan Hover Zoom & Eye Icon --}}
                     <div class="relative h-52 overflow-hidden cursor-pointer" 
-                        @click="openPreview = true; previewImg = '{{ $item['image'] }}'; previewTitle = '{{ $item['name'] }}'">
+                        @click="openPreview = true; previewImg = '{{ asset('storage/fasilitas/' . $item->image) }}'; previewTitle = '{{ $item->nama }}'; previewDesc = '{{ $item->deskripsi }}'">
                         
                         <img src="{{ asset('storage/fasilitas/' . $item->image) }}" 
                             alt="{{ $item['nama'] }}" 
@@ -152,10 +154,12 @@
                             <h4 class="text-lg font-bold text-slate-800 mb-1 group-hover:text-[#1265A8] transition-colors">
                                 {{ $item['nama'] }}
                             </h4>
-                            <p class="text-slate-500 text-sm line-clamp-2 mb-2">
+                            <p class="text-slate-500 text-sm line-clamp-2 mb-4">
                                 {{ $item->deskripsi }}
                             </p>
-                            
+
+
+
                         </div>
 
                         <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-50">
@@ -164,6 +168,7 @@
                             </h4>
 
                             <div class="flex items-center gap-3">
+                                @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
                                 <form id="delete-form-{{ $item->id }}" action="{{ route('fasilitas.destroy', $item->id) }}" method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
@@ -189,6 +194,9 @@
                                         </svg>
                                     </div>
                                 </a>
+                                @else
+                                <span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-xs font-semibold">View Only</span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -197,66 +205,10 @@
             </div>
 
             {{-- MODAL PREVIEW (Akan muncul saat gambar diklik) --}}
-            <div x-show="openPreview" 
-                @keydown.escape.window="openPreview = false"
-                class="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10"
-                x-cloak>
-                
-                {{-- Layer Latar Belakang --}}
-                <div class="absolute inset-0 bg-black/70 backdrop-blur-xl cursor-pointer" 
-                    @click="openPreview = false"
-                    x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="opacity-0"
-                    x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-200"
-                    x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0">
-                </div>
-
-                {{-- Layer Konten (Gambar & Judul) --}}
-                <div class="relative z-10 w-full max-w-5xl flex flex-col items-center pointer-events-none"
-                    x-show="openPreview"
-                    x-transition:enter="transition ease-out duration-300 delay-75"
-                    x-transition:enter-start="opacity-0 scale-95 translate-y-8"
-                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-200"
-                    x-transition:leave-start="opacity-100 scale-100"
-                    x-transition:leave-end="opacity-0 scale-95">
-                    
-                    {{-- Bingkai Gambar (pointer-events-auto agar gambar sendiri tidak 'tembus' klik) --}}
-                    <div class="relative h-150 overflow-hidden cursor-pointer" 
-                        @click="openPreview = true; 
-                                previewImg = '{{ asset('storage/fasilitas/' . $item->image) }}'; 
-                                previewTitle = '{{ $item->nama }}'; 
-                                previewDesc = '{{ $item->deskripsi }}'">
-                        
-                        <img src="{{ asset('storage/fasilitas/' . $item->image) }}" 
-                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                        
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                        </div>
-                    </div>
-                    
-                    {{-- Info Box --}}
-                    <div class="mt-8 text-center pointer-events-auto">
-                        <div class="inline-block px-5 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl">
-                            <h4 class="text-white text-xl font-black tracking-tight uppercase">{{ $item['nama'] }}</h4>
-                        </div>
-                        
-                        {{-- Petunjuk Visual --}}
-                        <div class="mt-6 flex items-center justify-center gap-3 opacity-40">
-                            <div class="w-10 h-[1px] bg-white"></div>
-                            <p class="text-white text-[9px] font-medium tracking-[0.2em] uppercase">Klik di mana saja untuk kembali</p>
-                            <div class="w-10 h-[1px] bg-white"></div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
+
+
 
         <style>
             [x-cloak] { display: none !important; }

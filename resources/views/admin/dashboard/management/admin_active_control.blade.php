@@ -1,489 +1,456 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOE-Space Reserve | Admin Control</title>
-    <link rel="icon" href="/image/logo/tutwuri-logo.svg">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>BOE-Space Reserve | Manage Admins</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; background-color: #f8fafc; 
-        }
-
-        .card-shadow { 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); 
-        }
-
-        @keyframes modern-pulse {
-            0% { transform: scale(1); opacity: 1; }
-            70% { transform: scale(2.5); opacity: 0; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-
-        .animate-ping-slow {
-            animation: modern-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; overflow: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
         
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        .admin-item { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .admin-item.active { background: white; border-color: #1265A8; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); transform: translateX(8px); }
+        .admin-item.active .avatar { background: #1265A8; color: white; }
+        
+        .control-panel { transition: all 0.4s ease; transform: translateY(0); opacity: 1; }
+        .panel-hidden { transform: translateY(20px); opacity: 0; pointer-events: none; }
+        
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e2e8f0; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #1265A8; }
+        input:checked + .slider:before { transform: translateX(20px); }
 
-        .animate-fadeIn { 
-            animation: fadeIn 0.3s ease-out forwards; 
-        }
-
-        .animate-slideUp { 
-            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-        }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease forwards; }
     </style>
 </head>
-<body class="antialiased text-slate-800 p-4 md:p-10">
-    <div class="max-w-6xl mx-auto space-y-8">
-        
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6 p-4 bg-slate-50 rounded-3xl border border-slate-200/60 shadow-sm">
-    
-            <div class="relative bg-gradient-to-br from-blue-600 to-blue-700 text-white px-6 py-5 rounded-2xl flex items-center gap-8 shadow-xl shadow-blue-200/50 min-w-[320px] overflow-hidden group">
-                
-                <div class="flex-1 z-10">
-                    <p class="text-[10px] font-black opacity-70 tracking-[0.2em] uppercase mb-1">Status Panel</p>
-                    <h2 class="text-2xl font-black tracking-tight uppercase italic">Admin Aktif</h2>
+<body class="flex h-screen overflow-hidden">
+    @include('admin.dashboard.layouts.sidebar')
+
+    <main class="flex-1 flex flex-col md:ml-64 bg-[#f8fafc] h-screen transition-all duration-500">
+        <!-- Header -->
+        <header class="h-20 flex items-center justify-between px-8 bg-white/50 backdrop-blur-md border-b border-slate-100 z-10">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-blue-50 rounded-lg text-[#1265A8]">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15.21 17.035a4.82 4.82 0 01-1.076-.253 1 1 0 01-.608-.713 2.502 2.502 0 00-4.45 0 1 1 0 01-.608.713 4.82 4.82 0 01-1.076.253M14 7a3 3 0 11-6 0 3 3 0 016 0zm6 3.354a4 4 0 110 5.292M19.21 19.035a4.82 4.82 0 01-1.076-.253 1 1 0 01-.608-.713 2.502 2.502 0 00-4.45 0 1 1 0 01-.608.713 4.82 4.82 0 01-1.076.253"></path></svg>
                 </div>
-
-                <div class="relative z-10">
-                    <div class="absolute -top-2 -right-2 flex h-5 w-5 z-20">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-5 w-5 bg-green-500 border-2 border-blue-600 shadow-sm"></span>
-                    </div>
-
-                    <div class="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center text-3xl font-black shadow-inner">
-                        {{ $admins->count() }}
-                    </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800 tracking-tight">Admin Active Control</h1>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Management & Role Controls</p>
                 </div>
             </div>
             
-            <button onclick="openCancelModal()" class="group relative flex items-center gap-4 bg-white border border-slate-200 px-10 py-4 rounded-[1.5rem] font-black text-slate-400 transition-all duration-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50/50 shadow-sm active:scale-95">
-                <div class="flex items-center justify-center w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-rose-100 transition-colors">
-                    <i class="fas fa-times text-xs"></i>
-                </div>
-                <span class="tracking-[0.3em] text-[11px] uppercase">Batal</span>
-            </button>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('dashboardAddNewAdmin') }}" class="px-5 py-2.5 bg-[#1265A8] text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:scale-105 transition-transform flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    New Account
+                </a>
+                <button onclick="toggleSidebar()" class="md:hidden p-2.5 bg-slate-100 rounded-xl text-slate-600 active:scale-90 transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </header>
 
-            <div id="cancelModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center p-4">
-                <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fadeIn"></div>
+        <!-- Main Content Area -->
+        <div class="flex-1 flex overflow-hidden p-6 gap-6">
+            
+            <!-- Left Panel: Admin List -->
+            <div class="w-full md:w-[380px] flex flex-col gap-4 overflow-hidden">
+                <div class="flex items-center justify-between px-2">
+                    <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest">Accounts ({{ count($admins) }})</h3>
+                    <div class="relative">
+                        <input type="text" id="adminSearch" placeholder="Search..." class="w-32 py-1.5 px-3 text-xs bg-white border border-slate-200 rounded-full focus:w-48 transition-all outline-none focus:ring-2 focus:ring-blue-100 font-medium">
+                    </div>
+                </div>
                 
-                <div id="modalContent" class="relative bg-white w-full max-w-sm rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden animate-slideUp">
-                    <div class="p-8 text-center flex flex-col items-center">
-                        <div class="w-20 h-20 rounded-3xl bg-rose-50 flex items-center justify-center text-rose-500 mb-6 icon-warning">
-                            <i class="fas fa-exclamation-triangle text-3xl"></i>
-                        </div>
-                        <h3 class="text-xl font-black text-slate-800 mb-2">Konfirmasi Batal</h3>
-                        <p class="text-sm text-slate-500 font-medium leading-relaxed mb-8">Apakah anda yakin ingin membatalkannya?</p>
+                <div id="adminList" class="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-3">
+                    @foreach($admins as $admin)
+                    <div onclick="selectAdmin({{ json_encode($admin->makeVisible(['password'])) }}, this)" 
+                         class="admin-item group cursor-pointer p-4 rounded-2xl border border-transparent bg-slate-50 hover:bg-white hover:border-slate-100 flex items-center gap-4 {{ $admin->id_log == session('id_log') ? 'ring-1 ring-slate-200 bg-white/50' : '' }}"
+                         data-id="{{ $admin->id_log }}"
+                         data-name="{{ $admin->nama }}"
+                         data-username="{{ $admin->username }}">
                         
-                        <div id="modalActions" class="w-full flex gap-3">
-                            <button onclick="closeCancelModal()" class="flex-1 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 transition-all text-xs uppercase tracking-widest">Tidak</button>
-                            <button onclick="startFinalLoading(this)" class="flex-1 py-4 rounded-2xl bg-rose-500 text-white font-bold shadow-lg shadow-rose-200 hover:bg-rose-600 transition-all active:scale-95 text-xs uppercase tracking-widest">Ya, Batal</button>
+                        <div class="avatar w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-[#1265A8] font-bold text-lg group-hover:bg-[#1265A8] group-hover:text-white transition-all shrink-0">
+                            {{ strtoupper(substr($admin->nama, 0, 1)) }}
+                        </div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-sm font-bold text-slate-800 truncate">{{ $admin->nama }}</h4>
+                                @if($admin->id_log == session('id_log'))
+                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded">Me</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-[11px] font-medium text-slate-400 truncate">@ {{ $admin->username }}</span>
+                                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{{ $admin->role }}</span>
+                            </div>
                         </div>
 
-                        <div id="modalLoading" class="hidden py-4 flex flex-col items-center gap-4">
-                            <svg class="animate-spin h-10 w-10 text-rose-500" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span class="text-xs font-black text-rose-500 uppercase tracking-[0.3em]">Memproses...</span>
-                        </div>
+                        @if($admin->force_logout)
+                            <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100" title="Locked"></div>
+                        @else
+                            <div class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100 animate-pulse" title="Active"></div>
+                        @endif
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            <div class="lg:col-span-4 flex flex-col gap-6">
-                <div class="bg-white rounded-[2.5rem] p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/80 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
-                    
-                    <div class="flex items-center justify-between px-7 py-6 relative overflow-hidden">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-indigo-500 to-blue-500 rounded-r-full"></div>
-
-                        <div class="flex flex-col gap-1">
-                            <div class="flex items-center gap-2">
-                                <h3 class="text-slate-800 font-black text-sm tracking-[0.25em] uppercase">Account</h3>
-                                <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[9px] font-bold">DB v1.0</span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="relative flex h-2 w-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                </span>
-                                <span class="text-[11px] text-slate-400 font-bold tracking-tight">{{ $admins->count() }} Active Administrators</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-1 px-2 pb-2">
-                        <div class="space-y-3 px-2 pb-2">
-                             @foreach($admins as $index => $admin)
-                                <div class="group flex items-center gap-4 p-4 rounded-[2rem] 
-                                            transition-all duration-300 
-                                            hover:bg-blue-50/50 
-                                            cursor-pointer 
-                                            border border-transparent 
-                                            hover:border-blue-100/50">
-
-                                    <div class="relative">
-                                        <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-100 
-                                                    flex items-center justify-center text-blue-500
-                                                    group-hover:scale-110 group-hover:-rotate-3 
-                                                    transition-all duration-500 ease-out">
-                                            <i class="fas fa-user-shield text-xl"></i>
-                                        </div>
-
-                                        <!-- online indicator -->
-                                        <div class="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center">
-                                            <div class="relative flex h-5 w-5 items-center justify-center 
-                                                        rounded-full bg-white shadow-sm ring-2 ring-white">
-                                                <span class="relative flex h-3 w-3 rounded-full bg-green-500">
-                                                    <span class="absolute inline-flex h-full w-full animate-ping 
-                                                                rounded-full bg-green-400 opacity-75"></span>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-col flex-1">
-                                        <span class="text-[10px] font-bold text-blue-400 uppercase tracking-[0.15em]">
-                                            Admin {{ $index + 1 }}
-                                        </span>
-                                        <span class="text-[15px] font-bold text-slate-700 tracking-tight">
-                                            {{ $admin->username }}
-                                        </span>
-                                    </div>
-
-                                    <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <i class="fas fa-chevron-right text-blue-300 text-xs"></i>
-                                    </div>
-
-                                </div>
-                            @endforeach
-                        </div>
-                        <div class="group flex items-center gap-4 p-4 rounded-[2rem] transition-all duration-300 hover:bg-blue-50/50 cursor-pointer border border-transparent hover:border-blue-100/50">
-                            <div class="relative group/avatar">
-                                <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-500 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 ease-out">
-                                    <i class="fas fa-user-tie text-xl"></i>
-                                </div>
-
-                                <div class="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center">
-                                    <div class="relative flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-sm ring-2 ring-white">
-                                        
-                                        <span class="relative flex h-3 w-3 rounded-full bg-blue-500">
-                                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-                                        </span>
-                                        
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="opacity-0 group-hover:opacity-100 transition-opacity pr-4">
-                                <i class="fas fa-chevron-right text-blue-300 text-xs"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-4 pt-0">
-                        <a href="/admin/dashboard/management/add_new_admin" onclick="btnLoadingAction(this, event)" class="relative w-full flex items-center justify-center gap-2 py-4 rounded-[1.5rem] bg-slate-50 text-slate-500 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 hover:bg-slate-100 hover:text-slate-700 overflow-hidden group/btn">
-                            <div class="flex items-center gap-2 transition-all duration-700 ease-in-out group-[.is-loading]/btn:opacity-0 group-[.is-loading]/btn:scale-95 group-[.is-loading]/btn:-translate-y-4">
-                                <i class="fas fa-plus-circle text-xs opacity-60"></i>
-                                <span>Add New Member</span>
-                            </div>
-                            <div class="absolute inset-0 flex items-center justify-center gap-3 opacity-0 translate-y-4 transition-all duration-700 ease-in-out group-[.is-loading]/btn:opacity-100 group-[.is-loading]/btn:translate-y-0">
-                                <svg class="animate-spin h-5 w-5 text-slate-600" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span class="text-slate-600 lowercase italic font-medium tracking-normal">Processing...</span>
-                            </div>
-                        </a>
-                    </div>
+                    @endforeach
                 </div>
             </div>
 
-            <div class="lg:col-span-8">
-                <div class="bg-white rounded-3xl overflow-hidden card-shadow border border-slate-100">
-                    <div class="flex items-center justify-between px-7 py-6 relative overflow-hidden bg-white rounded-t-[2rem] border-b border-slate-100">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-r-full"></div>
-
-                        <div class="flex items-center gap-5">
-                            <div class="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400">
-                                <i class="fas fa-cog animate-[spin_10s_linear_infinite] text-lg"></i>
-                            </div>
-
-                            <div class="flex flex-col gap-1">
-                                <div class="flex items-center gap-3">
-                                    <h3 class="text-slate-800 font-black text-sm tracking-[0.3em] uppercase">Control Panel</h3>
-                                    <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[9px] font-black border border-slate-200/60 tracking-[0.15em] uppercase transition-all">
-                                        Admin
-                                    </span>
-                                </div>
-                                
-                                <div class="flex items-center gap-2">
-                                    <span class="relative flex h-2 w-2">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                                    </span>
-                                    <span class="text-[11px] text-slate-400 font-bold tracking-tight uppercase opacity-80">System Management Active</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="hidden md:flex items-center justify-center">
-                            <div class="w-12 h-12 flex items-center justify-center rounded-2xl border border-blue-100 bg-blue-50/80 shadow-sm shadow-blue-100/30">
-                                <i class="fas fa-shield-alt text-xl text-blue-500"></i>
-                            </div>
-                        </div>
+            <!-- Right Panel: Control Panel -->
+            <div id="controlPanel" class="flex-1 glass-card rounded-[2.5rem] shadow-xl shadow-slate-200/50 flex flex-col overflow-hidden relative border border-white">
+                
+                <!-- Empty State (Hidden when admin selected) -->
+                <div id="emptyPanel" class="absolute inset-0 flex flex-col items-center justify-center text-center p-10 z-20 bg-white/90 backdrop-blur-sm transition-opacity duration-300">
+                    <div class="w-24 h-24 bg-blue-50 rounded-[2rem] flex items-center justify-center text-[#1265A8] mb-6 animate-bounce">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     </div>
+                    <h2 class="text-2xl font-black text-slate-800">Select an Account</h2>
+                    <p class="mt-2 text-slate-400 font-medium max-w-xs">Select an admin from the list on the left to manage their permissions and account settings.</p>
+                </div>
 
-                    <div class="p-6 space-y-4 bg-slate-50/50">
-                        @foreach($admins as $index => $admin)
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 
-                                    flex flex-wrap md:flex-nowrap items-center gap-4 
-                                    hover:border-blue-300 transition-colors shadow-sm 
-                                    {{ $loop->first ? '' : 'opacity-80' }}">
+                <!-- Panel Header -->
+                <div class="p-8 pb-4 flex items-center justify-between">
+                    <div>
+                        <h2 id="panelTitle" class="text-2xl font-black text-slate-800">Admin Control</h2>
+                        <p id="panelSubTitle" class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Manage Credentials & Access</p>
+                    </div>
+                    <div id="roleBadge" class="px-4 py-1.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-[11px] font-black uppercase tracking-wider shadow-sm">
+                        Owner
+                    </div>
+                </div>
 
-                            <div class="w-12 h-12 bg-slate-100 rounded-full 
-                                        flex items-center justify-center 
-                                        {{ $loop->first ? 'text-red-500' : 'text-blue-500' }} 
-                                        shrink-0">
-                                <i class="fas fa-user text-xl"></i>
+                <!-- Form Scrollable -->
+                <div class="flex-1 overflow-y-auto px-8 py-4 custom-scrollbar">
+                    <form id="updateForm" onsubmit="handleUpdate(event)" class="space-y-6">
+                        <input type="hidden" id="editId">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Name Field -->
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                                <div class="relative group">
+                                    <input type="text" id="editNama" required
+                                        class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all outline-none font-semibold text-slate-700">
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#1265A8] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                </div>
+                            </div>
+
+                            <!-- Username Field -->
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
+                                <div class="relative group">
+                                    <input type="text" id="editUsername" required
+                                        class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all outline-none font-semibold text-slate-700">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold group-focus-within:text-[#1265A8]">@</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Spacer line -->
+                        <div class="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent my-2"></div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Password Lama (View) -->
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Password Lama</label>
+                                <div class="relative group">
+                                    <div class="flex items-center">
+                                        <input type="password" id="oldPassword" readonly
+                                            class="w-full px-5 py-3.5 bg-slate-100/50 border border-slate-100 rounded-2xl font-mono font-bold text-slate-500 cursor-default outline-none" value="********">
+                                        <button type="button" onclick="toggleViewPassword('oldPassword', this)" class="absolute right-4 text-slate-400 hover:text-[#1265A8]">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-400 font-medium ml-1">* Kata sandi saat ini yang terdaftar.</p>
+                            </div>
+
+                            <!-- Password Baru -->
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Password Baru</label>
+                                <div class="relative group">
+                                    <input type="text" id="newPassword" placeholder="Biarkan kosong jika tidak diubah"
+                                        class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all outline-none font-semibold text-slate-700">
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#1265A8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Special Controls Section -->
+                        <div id="adminControlsArea" class="p-6 bg-blue-50/50 rounded-[2rem] border border-blue-50 space-y-5">
+                            <!-- Can Edit Toggle -->
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#1265A8] shadow-sm">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"></path></svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-sm font-black text-slate-700">Editing Permissions</h5>
+                                        <p class="text-[11px] font-medium text-slate-400">Allow this admin to modify website data.</p>
+                                    </div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="canEditToggle">
+                                    <span class="slider"></span>
+                                </label>
                             </div>
                             
-                            <div class="flex-1 min-w-[200px]">
-                                <div class="bg-slate-50 rounded-xl px-4 py-2 border border-slate-100 
-                                            flex items-center justify-between">
-
-                                    <span class="text-sm font-medium text-slate-600 truncate mr-2">
-                                        {{ $admin->username }}
-                                    </span>
-
-                                    @if($loop->first)
-                                        <!-- ONLINE -->
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 
-                                                    rounded-full text-[10px] font-black 
-                                                    bg-green-50 text-green-600 border border-green-100">
-                                            <span class="relative flex h-2 w-2">
-                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                            </span>
-                                            ONLINE
-                                        </span>
-                                    @else
-                                        <!-- OFFLINE -->
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 
-                                                    rounded-full text-[10px] font-black 
-                                                    bg-slate-50 text-slate-400 border border-slate-200/60">
-                                            <span class="relative flex h-2 w-2">
-                                                <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-slate-300 opacity-75"></span>
-                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-slate-400"></span>
-                                            </span>
-                                            OFFLINE
-                                        </span>
-                                    @endif
-
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-2 w-full md:w-auto">
-                                <a href="{{ route('admin.view', $admin->id_log) }}"
-                                    class="flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-
-                                <a href="{{ route('admin.manage', $admin->id_log) }}" 
-                                onclick="handleLoading(event, this)"
-                                class="relative flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-emerald-600 hover:text-white transition-all overflow-hidden min-w-[70px]">
-                                    
-                                    <div class="flex flex-col items-center gap-1 btn-content">
-                                        <i class="fas fa-user-edit"></i> 
-                                        <span>Manage</span>
+                            <!-- Force Logout Control -->
+                            <div class="flex items-center justify-between pt-4 border-t border-blue-100/50">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-rose-500 shadow-sm">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                                     </div>
-                                </a>
-
-                                <button onclick="openLogoutModal()" 
-                                        class="flex-1 md:flex-none flex flex-col items-center justify-center gap-1 bg-rose-50 text-rose-600 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all duration-300 shadow-sm">
-                                    <i class="fas fa-power-off"></i> 
-                                    <span>Logout</span>
+                                    <div>
+                                        <h5 class="text-sm font-black text-slate-700">Account Locking</h5>
+                                        <p id="forceLogoutStatus" class="text-[11px] font-bold text-emerald-500 uppercase">Status: Active</p>
+                                    </div>
+                                </div>
+                                <button type="button" id="forceLogoutBtn" onclick="toggleForceLogout()"
+                                    class="px-4 py-2 bg-rose-100 text-rose-600 rounded-xl text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">
+                                    Force Logout
                                 </button>
                             </div>
                         </div>
-                        @endforeach
-                    </div> 
+                    </form>
+                </div>
 
-    <div id="logoutModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
-        
-        <div id="logoutContent" class="relative bg-white w-full max-w-sm rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden scale-95 opacity-0 transition-all duration-300">
-            <div class="p-8 text-center flex flex-col items-center">
-                
-                <div id="logoutMainUI" class="flex flex-col items-center">
-                    <div class="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 mb-5">
-                        <i class="fas fa-sign-out-alt text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg font-black text-slate-800 mb-2 uppercase tracking-tight">Konfirmasi Logout</h3>
-                    <p class="text-sm text-slate-500 font-medium leading-relaxed mb-8">Apakah anda yakin ingin mengakhiri sesi ini?</p>
+                <!-- Footer Actions -->
+                <div class="p-8 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+                    <button type="button" id="deleteBtn" onclick="handleDelete()"
+                        class="px-5 py-3 text-rose-500 hover:bg-rose-50 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Delete Account
+                    </button>
                     
-                    <div class="w-full flex gap-3">
-                        <button onclick="closeLogoutModal()" class="flex-1 py-3.5 rounded-xl font-bold text-slate-400 hover:bg-slate-100 transition-all text-[11px] uppercase tracking-widest">Tidak</button>
-                        <button onclick="processLogout()" class="flex-1 py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg hover:bg-rose-600 transition-all text-[11px] uppercase tracking-widest">Ya, Keluar</button>
-                    </div>
-                </div>
-
-                <div id="logoutLoading" class="hidden py-6 flex flex-col items-center gap-4">
-                    <div class="w-12 h-12 border-4 border-rose-100 border-t-rose-500 rounded-full animate-spin"></div>
-                    <span class="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] animate-pulse">Menghapus Sesi...</span>
-                </div>
-
-                <div id="logoutSuccess" class="hidden py-6 flex flex-col items-center gap-4 animate-slideUp">
-                    <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-100">
-                        <i class="fas fa-check text-2xl"></i>
-                    </div>
-                    <div class="text-center">
-                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Berhasil Keluar</h3>
-                        <p class="text-[11px] text-slate-500 font-medium mt-1">Anda akan segera dialihkan...</p>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="cancelEdit()" class="px-6 py-3 text-slate-400 hover:text-slate-600 text-xs font-black uppercase tracking-widest transition-all">
+                            Batal
+                        </button>
+                        <button type="submit" form="updateForm" class="px-8 py-3 bg-[#1265A8] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-100 hover:scale-105 active:scale-95 transition-all">
+                            Update Account
+                        </button>
                     </div>
                 </div>
 
             </div>
+
         </div>
-    </div>
+    </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // selektor modal batal
-            const modal = document.getElementById('cancelModal');
-            const modalActions = document.getElementById('modalActions');
-            const modalLoading = document.getElementById('modalLoading');
-            const modalElements = document.querySelectorAll('#modalContent h3, #modalContent p, #modalContent .icon-warning');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        let selectedAdminData = null;
+        let selectedRowElement = null;
 
-            // selektor modal logout
-            const logoutModal = document.getElementById('logoutModal');
-            const logoutContent = document.getElementById('logoutContent');
-            const logoutMainUI = document.getElementById('logoutMainUI');
-            const logoutLoading = document.getElementById('logoutLoading');
-
-            // fungsi modal logout
-            window.openLogoutModal = function() {
-                if (logoutModal) {
-                    logoutModal.classList.remove('hidden');
-                    document.body.style.overflow = 'hidden';
-                    setTimeout(() => {
-                        logoutContent.classList.remove('scale-95', 'opacity-0');
-                        logoutContent.classList.add('scale-100', 'opacity-100');
-                    }, 10);
+        // Search Admin
+        document.getElementById('adminSearch').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.admin-item').forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                const username = item.dataset.username.toLowerCase();
+                if (name.includes(term) || username.includes(term)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
                 }
-            };
+            });
+        });
 
-            window.closeLogoutModal = function() {
-                if (logoutContent) {
-                    logoutContent.classList.add('scale-95', 'opacity-0');
-                    logoutContent.classList.remove('scale-100', 'opacity-100');
-                    setTimeout(() => {
-                        logoutModal.classList.add('hidden');
-                        document.body.style.overflow = 'auto';
-                    }, 300);
-                }
-            };
+        function selectAdmin(admin, element) {
+            selectedAdminData = { ...admin };
+            
+            // UI Toggle
+            if (selectedRowElement) selectedRowElement.classList.remove('active');
+            selectedRowElement = element;
+            selectedRowElement.classList.add('active');
+            
+            document.getElementById('emptyPanel').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('emptyPanel').style.display = 'none';
+            }, 300);
 
-            window.processLogout = function() {
-                const logoutSuccess = document.getElementById('logoutSuccess');
-                
-                // Loading
-                logoutMainUI.classList.add('hidden');
-                logoutLoading.classList.remove('hidden');
-
-                // Simulasi Proses 
-                setTimeout(() => {
-                    // Sembunyikan Loading, Munculkan Sukses
-                    logoutLoading.classList.add('hidden');
-                    logoutSuccess.classList.remove('hidden');
-
-                    setTimeout(() => {
-                        window.location.href = "/admin/dashboard/management/admin_active_control"; 
-                    }, 1500);
-                    
-                }, 2000);
-            };
-
-            // Klik di luar modal logout untuk menutup
-            if (logoutModal) {
-                logoutModal.addEventListener('click', (e) => {
-                    if (e.target === logoutModal || e.target.classList.contains('backdrop-blur-sm')) {
-                        closeLogoutModal();
-                    }
-                });
+            // Populate Form
+            document.getElementById('editId').value = admin.id_log;
+            document.getElementById('editNama').value = admin.nama;
+            document.getElementById('editUsername').value = admin.username;
+            document.getElementById('oldPassword').value = admin.password;
+            document.getElementById('newPassword').value = '';
+            document.getElementById('canEditToggle').checked = admin.can_edit == 1;
+            
+            // Header Info
+            document.getElementById('panelTitle').innerText = admin.nama;
+            document.getElementById('panelSubTitle').innerText = `@${admin.username} — ${admin.role.toUpperCase()}`;
+            
+            // Badge & Visibility based on Role
+            const roleBadge = document.getElementById('roleBadge');
+            roleBadge.innerText = admin.role;
+            if (admin.role === 'owner') {
+                roleBadge.className = 'px-4 py-1.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-[11px] font-black uppercase tracking-wider shadow-sm';
+                document.getElementById('adminControlsArea').style.display = 'none';
+            } else {
+                roleBadge.className = 'px-4 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-full text-[11px] font-black uppercase tracking-wider shadow-sm';
+                document.getElementById('adminControlsArea').style.display = 'block';
             }
 
-            window.handleLoading = function(event, element) {
-                event.preventDefault();
-                
-                const targetUrl = element.getAttribute('href');
-                const content = element.querySelector('.btn-content');
-                const loading = element.querySelector('.loading-content');
+            // Status Locking
+            const statusText = document.getElementById('forceLogoutStatus');
+            const logoutBtn = document.getElementById('forceLogoutBtn');
+            if (admin.force_logout) {
+                statusText.innerText = 'Status: Locked / Forced Out';
+                statusText.className = 'text-[11px] font-bold text-rose-500 uppercase';
+                logoutBtn.innerText = 'Allow Login';
+                logoutBtn.className = 'px-4 py-2 bg-emerald-100 text-emerald-600 rounded-xl text-[10px] font-black uppercase hover:bg-emerald-500 hover:text-white transition-all';
+            } else {
+                statusText.innerText = 'Status: Active';
+                statusText.className = 'text-[11px] font-bold text-emerald-500 uppercase';
+                logoutBtn.innerText = 'Force Logout';
+                logoutBtn.className = 'px-4 py-2 bg-rose-100 text-rose-600 rounded-xl text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all';
+            }
 
-                // memastikan elemen ada sebelum dimanipulasi
-                if (content && loading) {
-                    content.classList.add('opacity-0');
-                    loading.classList.remove('hidden');
-                    element.classList.add('pointer-events-none'); 
+            // Animasi masuk
+            const form = document.querySelector('#controlPanel form');
+            form.classList.remove('animate-fade-in');
+            void form.offsetWidth; // Trigger reflow
+            form.classList.add('animate-fade-in');
+        }
 
-                    setTimeout(() => {
-                        window.location.href = targetUrl;
-                    }, 1800);
-                } else {
-                    window.location.href = targetUrl;
+        function cancelEdit() {
+            if (selectedAdminData) {
+                selectAdmin(selectedAdminData, selectedRowElement);
+            }
+        }
+
+        function toggleViewPassword(id, btn) {
+            const input = document.getElementById(id);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>`;
+            } else {
+                input.type = 'password';
+                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
+            }
+        }
+
+        async function handleUpdate(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const data = {
+                nama: document.getElementById('editNama').value,
+                username: document.getElementById('editUsername').value,
+                password: document.getElementById('newPassword').value,
+                can_edit: document.getElementById('canEditToggle').checked
+            };
+
+            Swal.fire({
+                title: 'Simpan Perubahan?',
+                text: 'Data admin akan diperbarui dan admin mungkin perlu login ulang.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#1265A8',
+                confirmButtonText: 'Ya, Update!',
+                customClass: { popup: 'rounded-[1.5rem]' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch(`/admin/update-credentials/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                            body: JSON.stringify(data)
+                        });
+                        const resultData = await res.json();
+                        if (resultData.success) {
+                            Swal.fire({ title: 'Success!', text: resultData.message, icon: 'success', timer: 1500, showConfirmButton: false });
+                            window.location.reload();
+                        } else {
+                            const errorMsg = resultData.errors ? Object.values(resultData.errors)[0][0] : resultData.message;
+                            Swal.fire('Error', errorMsg, 'error');
+                        }
+                    } catch (err) {
+                        Swal.fire('Error', 'Technical connection error', 'error');
+                    }
                 }
-            };
+            });
+        }
 
-            window.openCancelModal = function() {
-                if (modal) {
-                    modal.classList.remove('hidden');
-                    document.body.style.overflow = 'hidden';
+        async function toggleForceLogout() {
+            const id = selectedAdminData.id_log;
+            const isCurrentlyBlocked = selectedAdminData.force_logout;
+            
+            Swal.fire({
+                title: isCurrentlyBlocked ? 'Unlock Account?' : 'Force Logout?',
+                text: isCurrentlyBlocked ? 'Admin will be able to log in again.' : 'Admin will be kicked out and blocked from logging in.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: isCurrentlyBlocked ? '#10b981' : '#f43f5e',
+                confirmButtonText: 'Proceed',
+                customClass: { popup: 'rounded-[1.5rem]' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const res = await fetch(`/admin/force-logout/${id}`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrfToken }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        Swal.fire('Updated', data.message, 'success').then(() => window.location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
                 }
-            };
+            });
+        }
 
-            window.closeCancelModal = function() {
-                if (modal) {
-                    modal.classList.add('hidden');
-                    document.body.style.overflow = 'auto';
+        async function handleDelete() {
+            const id = selectedAdminData.id_log;
+            const name = selectedAdminData.nama;
+
+            Swal.fire({
+                title: 'Delete Account?',
+                text: `Permanent removal of ${name}. This cannot be undone!`,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'Yes, Delete Permanently',
+                customClass: { popup: 'rounded-[1.5rem]' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const res = await fetch(`/admin/delete/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': csrfToken }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        Swal.fire('Deleted!', 'Account has been removed.', 'success').then(() => window.location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
                 }
-            };
+            });
+        }
 
-            window.startFinalLoading = function() {
-                modalActions.classList.add('hidden');
-                modalElements.forEach(el => el.classList.add('hidden'));
-                modalLoading.classList.remove('hidden');
-                setTimeout(() => {
-                    window.location.href = "/admin/dashboard/master";
-                }, 1800);
-            };
-
-            // fungsi add member loading
-            window.btnLoadingAction = function(el, e) {
-                e.preventDefault();
-                const targetUrl = el.getAttribute('href');
-                el.classList.add('is-loading');
-                el.style.pointerEvents = 'none';
-                setTimeout(() => {
-                    window.location.href = targetUrl;
-                }, 1800);
-            };
-        });
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.md\\:ml-64');
+            const aside = document.querySelector('aside');
+            if (aside) {
+                // Simplified toggle logic for sidebar visibility on mobile
+                aside.classList.toggle('-translate-x-full');
+            }
+        }
     </script>
 </body>
 </html>

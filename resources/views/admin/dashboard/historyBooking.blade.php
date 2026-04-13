@@ -96,6 +96,7 @@
             <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 
                 <div class="flex items-center gap-3">
+                    @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
                     <label for="selectAll" class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition-all cursor-pointer select-none">
                         <div class="relative flex items-center justify-center">
                             <input type="checkbox" id="selectAll" class="peer appearance-none w-5 h-5 rounded border-2 border-slate-300 checked:bg-[#1265A8] checked:border-[#1265A8] transition-all cursor-pointer">
@@ -111,6 +112,7 @@
                             AKTIF
                         </div>
                     </label>
+                    @endif
 
                     <div id="bulkActions" class="hidden opacity-0 transition-all duration-300">
                         <button onclick="confirmBulkDelete()" class="px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 font-bold text-[11px] hover:bg-rose-600 hover:text-white transition-all flex items-center gap-2 shadow-sm">
@@ -182,7 +184,9 @@
                             @foreach($myData as $item)
                             <tr class="facility-row group hover:bg-slate-50/80 transition-all duration-300" data-facility="{{ $item['facility'] }}">
                                 <td class="p-6 text-center">
+                                    @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
                                     <input type="checkbox" onchange="updateSelectedCount()" class="item-checkbox w-5 h-5 rounded border-slate-300 text-[#1265A8] focus:ring-[#1265A8] cursor-pointer transition-all">
+                                    @endif
                                 </td>
                                 <td class="p-6 text-center">
                                     <div class="flex flex-col items-center">
@@ -208,9 +212,11 @@
                                 <td class="p-6 text-center text-xs font-bold text-slate-500 italic uppercase whitespace-nowrap">{{ $item['date'] }}</td>
                                 <td class="p-6 text-center">
                                     <div class="flex items-center justify-center gap-3 flex-nowrap">
+                                        @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
                                         <button onclick="confirmDelete(this)" class="p-2.5 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-90 flex-shrink-0">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
+                                        @endif
                                         <a href="/admin/dashboard/detail/detailBooking" class="p-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition-all shadow-md active:scale-90 flex-shrink-0">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                         </a>

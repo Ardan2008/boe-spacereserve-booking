@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="icon" href="/image/logo/tutwuri-logo.svg">
     <title>BOE-Space Reserve | Admin Dashboard</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -150,9 +151,19 @@
                     
                     <div id="scrollContainer" class="flex gap-3 overflow-x-auto pb-4 cursor-grab active:cursor-grabbing snap-x snap-mandatory no-scrollbar" style="scrollbar-width: none; -ms-overflow-style: none;">
                     
-                    @foreach(range(1, 5) as $i)
-                    <div onclick="delayedNavigation(this, '/admin/dashboard/edit/editDataLapangan')" 
-                        class="booking-card min-w-[240px] md:min-w-[260px] p-4 rounded-2xl bg-white border border-slate-100 transition-all duration-500 ease-out snap-center shadow-sm cursor-pointer hover:shadow-md active:scale-95 select-none group relative overflow-hidden">
+                    @forelse($pendingBookings as $booking)
+                    <div id="booking-card-{{ $booking->id }}" 
+                        onclick="showBookingDetail({
+                            id: '{{ $booking->id }}',
+                            nama: '{{ $booking->penyewa->nama }}',
+                            whatsapp: '{{ $booking->penyewa->whatsapp }}',
+                            email: '{{ $booking->penyewa->email }}',
+                            fasilitas: '{{ $booking->fasilitas->nama }}',
+                            mulai: '{{ \Carbon\Carbon::parse($booking->tgl_mulai)->format('d M Y') }}',
+                            selesai: '{{ \Carbon\Carbon::parse($booking->tgl_selesai)->format('d M Y') }}',
+                            total: 'Rp {{ number_format($booking->total_harga, 0, ',', '.') }}'
+                        })"
+                        class="booking-card min-w-[240px] md:min-w-[260px] p-4 rounded-2xl bg-white border border-slate-100 transition-all duration-300 ease-out snap-center shadow-sm cursor-pointer hover:shadow-md hover:border-blue-100 select-none group relative overflow-hidden">
                         
                         <div class="content-wrapper transition-opacity duration-500">
                             <div class="flex items-center gap-3">
@@ -162,73 +173,146 @@
                                     </svg>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-black text-slate-800 truncate">User_Pemain_{{ $i }}</p>
-                                    <p class="text-[10px] text-slate-500 font-medium">Tennis Court #{{ $i }}</p>
+                                    <p class="text-xs font-black text-slate-800 truncate">{{ $booking->penyewa->nama }}</p>
+                                    <p class="text-[10px] text-slate-500 font-medium">{{ $booking->fasilitas->nama }}</p>
                                     <div class="mt-0.5 flex items-center gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Waiting Approval</p>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Menunggu Approval</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex gap-2 mt-4">
-                                <button onclick="event.stopPropagation(); openRejectModal(this, 'User_Pemain_{{ $i }}')" 
+                            <div class="mt-3 text-[10px] space-y-1 font-medium text-slate-500">
+                                <p><span class="font-bold">Mulai:</span> {{ \Carbon\Carbon::parse($booking->tgl_mulai)->format('d M Y') }}</p>
+                                <p><span class="font-bold">Selesai:</span> {{ \Carbon\Carbon::parse($booking->tgl_selesai)->format('d M Y') }}</p>
+                                <p><span class="font-bold">Total:</span> Rp {{ number_format($booking->total_harga, 0, ',', '.') }}</p>
+                            </div>
+
+                            @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
+                            <div class="flex gap-2 mt-4" onclick="event.stopPropagation()">
+                                <button onclick="openRejectModal({{ $booking->id }}, '{{ $booking->penyewa->nama }}')" 
                                     class="flex-1 py-2 px-3 bg-rose-50 border border-rose-100 text-rose-500 rounded-xl text-[10px] font-bold uppercase hover:bg-rose-500 hover:text-white transition-colors">
                                     Reject
                                 </button>
-                                <button onclick="event.stopPropagation(); confirmAction('approve')" 
+                                <button onclick="confirmAction('approve', {{ $booking->id }})" 
                                     class="flex-1 py-2 px-3 bg-[#1265A8] text-white rounded-xl text-[10px] font-bold uppercase shadow-md shadow-blue-100 hover:bg-[#0d548a] transition-colors">
                                     Approve
                                 </button>
                             </div>
+                            @endif
                         </div>
 
-                        <div class="loading-overlay absolute inset-0 bg-white/80 flex flex-col items-center justify-center opacity-0 transition-opacity duration-500 pointer-events-none">
+                        <div id="loader-{{ $booking->id }}" class="loading-overlay absolute inset-0 bg-white/80 flex flex-col items-center justify-center opacity-0 transition-opacity duration-500 pointer-events-none">
                             <div class="w-5 h-5 border-2 border-[#1265A8] border-t-transparent rounded-full animate-spin mb-1"></div>
-                            <span class="text-[8px] font-bold text-[#1265A8] uppercase tracking-widest">Loading...</span>
+                            <span class="text-[8px] font-bold text-[#1265A8] uppercase tracking-widest">Processing...</span>
                         </div>
                     </div>
-                    @endforeach
+                    @empty
+                    <div class="min-w-[240px] p-6 text-center text-slate-400">
+                        <p class="text-xs font-medium uppercase tracking-widest italic">Tidak ada permintaan booking</p>
+                    </div>
+                    @endforelse
 
                 </div>
                     
                     <p class="text-center text-[10px] text-slate-400 mt-2 font-medium italic">Geser untuk melihat request lainnya •</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                    <h4 class="text-slate-800 text-lg font-bold mb-6 flex items-center gap-2">
-                        <span class="w-2 h-6 bg-[#1265A8] rounded-full"></span>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
+                    <h4 class="text-slate-800 text-xs font-black mb-4 uppercase tracking-widest">
                         Status Legend
                     </h4>
                     
-                    <ul class="space-y-4">
-                        <li class="flex items-center gap-4 group p-1">
+                    <div class="flex flex-wrap items-center justify-center gap-6">
+                        <div class="flex items-center gap-2 group">
                             <div class="relative">
-                                <span class="block w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"></span>
-                                <span class="absolute inset-0 w-4 h-4 rounded-full bg-emerald-500 animate-ping opacity-20"></span>
+                                <span class="block w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"></span>
                             </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm text-slate-700 font-bold leading-none">Already Booked</span>
-                                <span class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">Terisi</span>
-                            </div>
-                        </li>
+                            <span class="text-[10px] text-slate-600 font-bold uppercase tracking-wider">Booked</span>
+                        </div>
 
-                        <li class="flex items-center gap-4 group p-1">
-                            <span class="w-4 h-4 rounded-full bg-slate-200 border border-slate-300"></span>
-                            <div class="flex flex-col">
-                                <span class="text-sm text-slate-700 font-bold leading-none">Schedule Not Available</span>
-                                <span class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">Libur/Tutup</span>
-                            </div>
-                        </li>
+                        <div class="flex items-center gap-2 group">
+                            <span class="w-3 h-3 rounded-full bg-slate-200 border border-slate-300"></span>
+                            <span class="text-[10px] text-slate-600 font-bold uppercase tracking-wider">Not Available</span>
+                        </div>
 
-                        <li class="flex items-center gap-4 group p-1">
-                            <span class="w-4 h-4 rounded-full bg-white border-2 border-slate-300 shadow-inner"></span>
-                            <div class="flex flex-col">
-                                <span class="text-sm text-slate-700 font-bold leading-none">Schedule Is Available</span>
-                                <span class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">Tersedia</span>
+                        <div class="flex items-center gap-2 group">
+                            <span class="w-3 h-3 rounded-full bg-white border-2 border-slate-200"></span>
+                            <span class="text-[10px] text-slate-600 font-bold uppercase tracking-wider">Available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- DETAIL BOOKING MODAL --}}
+        <div id="bookingDetailModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl transform transition-all scale-95 opacity-0 duration-300" id="detailModalContent">
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight">Detail Penyewa</h3>
+                            <p class="text-[10px] font-bold text-[#1265A8] mt-1 uppercase tracking-widest">Informasi Lengkap Reservasi</p>
+                        </div>
+                        <button onclick="closeDetailModal()" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#1265A8] shadow-sm flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Nama Lengkap</label>
+                                        <p id="detailName" class="text-sm font-bold text-slate-800"></p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-500 shadow-sm flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.94 3.659 1.437 5.634 1.437h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Kontak WhatsApp</label>
+                                        <p id="detailWhatsApp" class="text-sm font-bold text-slate-800"></p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-400 shadow-sm flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Alamat Email</label>
+                                        <p id="detailEmail" class="text-sm font-bold text-slate-800 lowercase"></p>
+                                    </div>
+                                </div>
                             </div>
-                        </li>
-                    </ul>
+                        </div>
+
+                        <div class="bg-blue-50/50 p-6 rounded-3xl border border-blue-100 flex items-center justify-between">
+                            <div>
+                                <label class="block text-[9px] font-black text-[#1265A8] uppercase tracking-widest mb-0.5">Fasilitas Pilihan</label>
+                                <p id="detailFacility" class="text-base font-black text-slate-800"></p>
+                                <p id="detailPeriod" class="text-[10px] text-slate-500 font-bold mt-1"></p>
+                            </div>
+                            <div class="text-right">
+                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total Harga</label>
+                                <p id="detailTotal" class="text-lg font-black text-[#1265A8]"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <button onclick="closeDetailModal()" 
+                            class="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-900 transition-all active:scale-95 shadow-lg">
+                            Tutup Detail
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -334,7 +418,7 @@
         renderCalendar();
 
         // Fungsi Khusus Reject dengan Input
-        function openRejectModal(button, userName) {
+        function openRejectModal(bookingId, userName) {
             Swal.fire({
                 title: `<span class="text-xl font-black text-rose-600">REJECT REQUEST</span>`,
                 html: `
@@ -362,31 +446,12 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Animasi Sukses
-                    Swal.fire({
-                        title: 'Berhasil Ditolak!',
-                        text: 'Notifikasi alasan telah dikirim ke user.',
-                        icon: 'success',
-                        iconColor: '#10B981', 
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            // Mewarnai progress bar menjadi hijau
-                            const progressBar = Swal.getTimerProgressBar();
-                            if (progressBar) progressBar.style.backgroundColor = '#10B981';
-                        },
-                        customClass: {
-                            popup: 'rounded-[2rem]'
-                        }
-                    });
-
-                    console.log(`Rejecting ${userName} with reason: ${result.value.reason}`);
+                    processBookingAction('reject', bookingId, result.value.reason);
                 }
             });
         }
 
-        function confirmAction(type) {
+        function confirmAction(type, bookingId) {
             const isApprove = type === 'approve';
             
             Swal.fire({
@@ -407,19 +472,77 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Berhasil!',
-                        text: `Booking telah di-${type}.`,
-                        icon: 'success',
-                        timer: 1500,
-                        showConfirmButton: false,
-                        customClass: {
-                            popup: 'rounded-[2rem]'
-                        }
-                    });
-                    
-                    console.log(`Action: ${type} dikirim ke server...`);
+                    processBookingAction(type, bookingId);
                 }
+            });
+        }
+
+        function processBookingAction(type, bookingId, reason = null) {
+            const loader = document.getElementById(`loader-${bookingId}`);
+            const card = document.getElementById(`booking-card-${bookingId}`);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            if (loader) loader.classList.add('opacity-100');
+            
+            const url = type === 'approve' 
+                ? `/admin/bookings/${bookingId}/approve` 
+                : `/admin/bookings/${bookingId}/reject`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ reason: reason })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (type === 'approve') {
+                        Swal.fire({
+                            title: 'Berhasil Disetujui!',
+                            text: data.message,
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Download Kwitansi',
+                            cancelButtonText: 'Tutup',
+                            confirmButtonColor: '#1265A8',
+                            customClass: { popup: 'rounded-[2rem]' }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = `/admin/bookings/${bookingId}/receipt`;
+                            }
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => card.remove(), 500);
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Berhasil Ditolak!',
+                            text: data.message,
+                            icon: 'success',
+                            showCancelButton: true,
+                            showConfirmButton: false,
+                            cancelButtonText: 'Tutup',
+                            cancelButtonColor: '#94A3B8',
+                            customClass: { popup: 'rounded-[2rem]' }
+                        }).then(() => {
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => card.remove(), 500);
+                        });
+                    }
+                } else {
+                    if (loader) loader.classList.remove('opacity-100');
+                    Swal.fire('Gagal!', data.message || 'Terjadi kesalahan.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (loader) loader.classList.remove('opacity-100');
+                Swal.fire('Error!', 'Terjadi kesalahan pada server.', 'error');
             });
         }
 
@@ -466,6 +589,39 @@
             setTimeout(() => {
                 window.location.href = url;
             }, 600);
+        }
+
+        function showBookingDetail(data) {
+            document.getElementById('detailName').innerText = data.nama;
+            document.getElementById('detailWhatsApp').innerText = data.whatsapp;
+            document.getElementById('detailEmail').innerText = data.email;
+            document.getElementById('detailFacility').innerText = data.fasilitas;
+            document.getElementById('detailPeriod').innerText = `${data.mulai} - ${data.selesai}`;
+            document.getElementById('detailTotal').innerText = data.total;
+
+            const modal = document.getElementById('bookingDetailModal');
+            const content = document.getElementById('detailModalContent');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('bookingDetailModal');
+            const content = document.getElementById('detailModalContent');
+            
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
         }
 
         backToTopBtn.addEventListener('click', () => {

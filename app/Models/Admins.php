@@ -18,6 +18,10 @@ class Admins extends Model
         'nama',
         'username',
         'password',
+        'role',
+        'can_edit',
+        'force_logout',
+        'logout_type',
     ];
 
     protected $hidden = [

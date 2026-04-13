@@ -154,7 +154,7 @@
                     <div class="space-y-1 mb-6">
                         <h3 class="text-slate-500 text-xs font-bold uppercase tracking-[0.15em]">Data Fasilitas</h3>
                         <div class="flex items-baseline gap-2">
-                            <p class="stat-value text-5xl font-black tracking-tighter text-slate-800" data-target="25">0</p>
+                            <p class="stat-value text-5xl font-black tracking-tighter text-slate-800" data-target="{{ $countFasilitas }}">0</p>
                             <span class="text-slate-400 font-bold text-sm">Units</span>
                         </div>
                     </div>
@@ -187,7 +187,7 @@
                     <div class="space-y-1 mb-6">
                         <h3 class="text-slate-500 text-xs font-bold uppercase tracking-[0.15em]">Jadwal Booking</h3>
                         <div class="flex items-baseline gap-2">
-                            <p class="stat-value text-5xl font-black tracking-tighter text-slate-800" data-target="100">0</p>
+                            <p class="stat-value text-5xl font-black tracking-tighter text-slate-800" data-target="{{ $countBooking }}">0</p>
                             <span class="text-slate-400 font-bold text-sm">Schedules</span>
                         </div>
                     </div>
@@ -220,7 +220,7 @@
                     <div class="space-y-1 mb-6">
                         <h3 class="text-slate-500 text-xs font-bold uppercase tracking-[0.15em]">Data Penyewa</h3>
                         <div class="flex items-baseline gap-2">
-                            <p class="stat-value text-5xl font-black tracking-tighter text-slate-800" data-target="50">0</p>
+                            <p class="stat-value text-5xl font-black tracking-tighter text-slate-800" data-target="{{ $countPenyewa }}">0</p>
                             <span class="text-slate-400 font-bold text-sm">People</span>
                         </div>
                     </div>
@@ -278,12 +278,14 @@
                     <p class="text-slate-400 text-sm mb-8">Atur ketersediaan, kelengkapan, dan detail operasional seluruh fasilitas Anda dalam satu panel kendali.</p>
                     
                     <div class="flex flex-col gap-3">
+                        @if(session('role') === 'owner' || filter_var(session('can_edit'), FILTER_VALIDATE_BOOLEAN))
                         <a href="/admin/dashboard/create/createFasilitas" onclick="handleNavClick(event, this)" class="nav-btn-loading flex items-center justify-center w-full px-6 py-4 bg-white text-slate-600 border-2 border-slate-100 rounded-2xl font-bold text-sm hover:border-[#4292DC] hover:text-[#4292DC] transition-all">
                             <span class="btn-text flex items-center">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                                 Tambah Fasilitas Baru
                             </span>
                         </a>
+                        @endif
                         
                         <a href="/admin/dashboard/dataFasilitas" onclick="handleNavClick(event, this)" class="nav-btn-loading group/btn flex items-center justify-between w-full px-6 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm transition-all hover:bg-[#1265A8] active:scale-95 shadow-lg shadow-slate-200">
                             <span class="btn-text">Lihat Semua Fasilitas</span>
@@ -293,7 +295,8 @@
                 </div>
             </div>
 
-            {{-- Card Manajemen Admin --}}
+            {{-- Card Manajemen Admin (Owner Only) --}}
+            @if(session('role') === 'owner')
             <div class="action-card group bg-white rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 relative overflow-hidden">
                 <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
 
@@ -321,6 +324,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
     </main>

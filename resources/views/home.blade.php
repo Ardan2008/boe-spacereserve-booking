@@ -101,7 +101,7 @@
             </p>
 
             <div data-aos="zoom-in" data-aos-delay="600" class="flex flex-col sm:flex-row gap-5">
-                <a href="/formBooking" id="bookingBtn" class="inline-flex items-center justify-center bg-[#276AD7] text-white px-12 py-4 rounded-2xl font-bold text-xl hover:bg-black transition-all duration-300 shadow-[0_10px_40px_rgba(39,106,215,0.6)] transform hover:-translate-y-1.5 active:scale-95 min-w-[240px]">
+                <a href="#booking" id="bookingBtn" class="inline-flex items-center justify-center bg-[#276AD7] text-white px-12 py-4 rounded-2xl font-bold text-xl hover:bg-black transition-all duration-300 shadow-[0_10px_40px_rgba(39,106,215,0.6)] transform hover:-translate-y-1.5 active:scale-95 min-w-[240px]">
                     Booking Now
                 </a>
 
@@ -324,9 +324,9 @@
                         {{-- Price Tag --}}
                         <div class="absolute top-5 right-5 z-20">
                             <div class="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl">
-                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none mb-1">Mulai</p>
+                                <p class="text-[8px] font-bold text-blue-600 uppercase tracking-[0.2em] leading-none mb-1">Price Range</p>
                                 {{-- Format harga otomatis --}}
-                                <p class="text-lg font-black text-gray-900 leading-none">Rp {{ number_format($item->harga, 0, ',', '.') }}</p>
+                                <p class="text-sm font-black text-gray-900 leading-none">{{ $item->harga_thumbnail }}</p>
                             </div>
                         </div>
                     </div>
@@ -334,12 +334,7 @@
                     {{-- Content --}}
                     <div class="px-3 py-6 flex flex-col flex-grow">
                         <h2 class="text-2xl font-black text-gray-800 tracking-tight mb-3">
-                            {{-- Logika Nama: Jika mengandung kata Aula tetap, jika tidak tambah kata Asrama --}}
-                            @if(str_contains(strtolower($item->nama), 'aula'))
-                                <span class="text-[#1d6fa5]">{{ $item->nama }}</span>
-                            @else
-                                <span class="text-[#1d6fa5]">{{ $item->nama }}</span>
-                            @endif
+                            <span class="text-[#1d6fa5]">{{ $item->nama }}</span>
                         </h2>
                         
                         <p class="text-gray-500 text-sm leading-relaxed mb-8 line-clamp-2">
@@ -350,7 +345,18 @@
                         <div class="mt-auto flex items-center gap-3">
                             {{-- Kirim data ke modal detail --}}
                             <button 
-                                onclick="openDescription('{{ $item->nama }}', '{{ $item->deskripsi }}', '{{ asset('storage/fasilitas/' . $item->image) }}')"
+                                onclick='openDescription(
+                                    {{ json_encode($item->nama) }}, 
+                                    {{ json_encode($item->deskripsi) }}, 
+                                    {{ json_encode(asset("storage/fasilitas/" . $item->image)) }},
+                                    {{ json_encode($item->detail) }},
+                                    @json($item->gallery),
+                                    @json($item->labels),
+                                    {{ json_encode($item->tipe) }},
+                                    {{ json_encode($item->max_dewasa) }},
+                                    {{ json_encode($item->max_anak) }},
+                                    {{ json_encode($item->jam_operasional) }}
+                                )'
                                 class="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold text-xs transition-all duration-200 active:scale-95 border border-gray-100"
                             >
                                 Lihat Detail
@@ -535,21 +541,59 @@
     let currentPreviewImg = "";
 
     // Logika Modal Deskripsi & Preview Gambar
-    function openDescription(title, body, imgUrl) {
+    function openDescription(title, body, imgUrl, detail, gallery, labels, tipe, max_dewasa, max_anak, jam_operasional) {
         const modal = document.getElementById('descModal');
         const modalContent = document.getElementById('modalContent');
         
-        document.getElementById('modalTitle').innerText = title;
-        document.getElementById('modalBody').innerText = body;
-        currentPreviewImg = imgUrl;
-
-        modal.classList.replace('hidden', 'flex');
+        document.getElementById('modalTitle').innerText = title || '-';
+        document.getElementById('modalBody').innerText = body || '-';
+        document.getElementById('modalDetail').innerText = detail || 'Tidak ada detail tambahan.';
+        document.getElementById('modalTypeLabel').innerText = 'Informasi ' + (tipe ? (tipe.charAt(0).toUpperCase() + tipe.slice(1)) : 'Fasilitas');
         
+        // Capacity & Hours
+        document.getElementById('modalMaxDewasa').innerText = max_dewasa || '-';
+        document.getElementById('modalMaxAnak').innerText = max_anak || '-';
+        document.getElementById('modalHours').innerText = jam_operasional || '-';
+        
+        // Gallery logic
+        const galleryContainer = document.getElementById('modalGallery');
+        galleryContainer.innerHTML = '';
+        if (gallery && Array.isArray(gallery) && gallery.length > 0) {
+            gallery.forEach(img => {
+                const imgElement = document.createElement('img');
+                imgElement.src = '/storage/fasilitas/gallery/' + img;
+                imgElement.className = 'w-full h-24 object-cover rounded-xl border border-slate-100 hover:scale-105 transition-transform cursor-pointer shadow-sm';
+                imgElement.onclick = () => {
+                    currentPreviewImg = imgElement.src;
+                    handlePreview();
+                };
+                galleryContainer.appendChild(imgElement);
+            });
+        } else {
+            galleryContainer.innerHTML = '<p class="col-span-3 text-[10px] text-slate-300 italic">No gallery photos</p>';
+        }
+
+        // Labels logic
+        const labelsContainer = document.getElementById('modalLabels');
+        labelsContainer.innerHTML = '';
+        if (labels && Array.isArray(labels) && labels.length > 0) {
+            labels.forEach(label => {
+                const span = document.createElement('span');
+                span.className = 'px-3 py-1.5 bg-blue-50 text-[#1d6fa5] text-[10px] font-black uppercase tracking-widest rounded-xl border border-blue-100 shadow-sm';
+                span.innerText = label;
+                labelsContainer.appendChild(span);
+            });
+        } else {
+            labelsContainer.innerHTML = '<span class="text-[10px] text-slate-300 italic">No features listed</span>';
+        }
+        
+        currentPreviewImg = imgUrl; // Default to main image
+        
+        modal.classList.replace('hidden', 'flex');
         setTimeout(() => {
             modalContent.classList.remove('scale-95', 'opacity-0');
             modalContent.classList.add('scale-100', 'opacity-100');
         }, 10);
-
         document.body.style.overflow = 'hidden';
     }
 
@@ -660,20 +704,7 @@
             });
         });
 
-        // Binding tombol booking (ID spesifik)
-        const bookingBtn = document.getElementById('bookingBtn');
-        if (bookingBtn) {
-            bookingBtn.addEventListener('click', function(e) {
-                triggerLoading(e, this);
-            });
-        }
 
-        // Binding semua tombol dengan class 'btn-book-now'
-        document.querySelectorAll('.btn-book-now').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                triggerLoading(e, this);
-            });
-        });
 
         // Close modal on click outside
         window.onclick = (event) => {
@@ -688,41 +719,86 @@
                 closeDescription();
             }
         });
+
+        // Booking Success Notification
+        if (sessionStorage.getItem('booking_success')) {
+            sessionStorage.removeItem('booking_success');
+            Swal.fire({
+                title: 'Berhasil!',
+                text: 'Pengajuan booking anda sedang di proses, mohon tunggu dan cek email yang telah di daftarkan untuk informasi lebih lanjut',
+                icon: 'success',
+                confirmButtonColor: '#1d6fa5',
+                customClass: {
+                    popup: 'rounded-[1.5rem]'
+                }
+            });
+        }
     });
 </script>
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <div id="descModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl transform transition-all scale-95 opacity-0 duration-300" id="modalContent">
-            <div class="p-8 md:p-10">
+        <div class="bg-white w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl transform transition-all scale-95 opacity-0 duration-300" id="modalContent">
+            <div class="p-8 md:p-12">
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <span class="text-[#1d6fa5] font-bold uppercase tracking-widest text-xs">Informasi Asrama</span>
-                        <h2 id="modalTitle" class="text-3xl font-black text-gray-800 mt-1 uppercase">Judul Card</h2>
+                        <span id="modalTypeLabel" class="text-[#1d6fa5] font-black uppercase tracking-[0.2em] text-[10px] bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Informasi</span>
+                        <h2 id="modalTitle" class="text-4xl font-black text-slate-900 mt-2 uppercase tracking-tighter">Judul Card</h2>
                     </div>
-                    <button onclick="closeDescription()" class="bg-gray-100 hover:bg-red-500 hover:text-white p-2 rounded-full transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <button onclick="closeDescription()" class="bg-slate-50 hover:bg-red-500 hover:text-white p-3 rounded-2xl transition-all duration-300 group">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
                 
-                <div class="h-1.5 w-16 bg-[#1d6fa5] rounded-full mb-6"></div>
+                <div class="h-1 w-12 bg-gradient-to-r from-[#1d6fa5] to-blue-400 rounded-full mb-8"></div>
                 
-                <p id="modalBody" class="text-gray-600 leading-relaxed text-lg font-medium">
-                    Deskripsi akan muncul di sini...
-                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h4 class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-2">Deskripsi</h4>
+                        <p id="modalBody" class="text-slate-600 leading-relaxed text-sm font-medium italic"></p>
+                        
+                        <h4 class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-2 mt-6">Detail Fasilitas</h4>
+                        <p id="modalDetail" class="text-slate-800 leading-relaxed text-sm font-bold"></p>
+                    </div>
+                    <div>
+                        <h4 class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-3">Informasi Operasional</h4>
+                        <div class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Cap. Dewasa</span>
+                                <span id="modalMaxDewasa" class="text-xs font-black text-slate-800"></span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Cap. Anak</span>
+                                <span id="modalMaxAnak" class="text-xs font-black text-slate-800"></span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Jam Ops.</span>
+                                <span id="modalHours" class="text-xs font-black text-[#1d6fa5]"></span>
+                            </div>
+                        </div>
 
-                <div class="mt-10 flex flex-col sm:flex-row gap-4">
-                    <button onclick="handlePreview()" class="flex-1 bg-[#1d6fa5] text-white py-4 rounded-2xl font-bold hover:bg-[#165a85] transition-all flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <h4 class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-3">Fitur & Layanan</h4>
+                        <div id="modalLabels" class="flex flex-wrap gap-2 mb-6"></div>
+                        
+                        <h4 class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-3">Gallery Preview</h4>
+                        <div id="modalGallery" class="grid grid-cols-3 gap-2"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-100">
+                    <button onclick="handlePreview()" class="flex-1 bg-[#1d6fa5] text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-[10px] hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100 group">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        Lihat Preview
+                        Main Photo
                     </button>
 
-                    <button onclick="closeDescription()" class="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all">
-                        Tutup Detail
+                    <button onclick="closeDescription()" class="flex-1 bg-slate-50 text-slate-400 py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-[10px] hover:bg-slate-100 transition-all">
+                        Tutup
                     </button>
                 </div>
             </div>

@@ -1,398 +1,128 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>BOE-Space Reserve | Add New Admin</title>
-    <link rel="icon" href="/image/logo/tutwuri-logo.svg">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>BOE-Space Reserve | Tambah Admin Baru</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #fbfbfd;
-        }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .input-glow:focus {
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
-        }
-
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid white;
-            width: 20px;
-            height: 20px;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .pop-in {
-            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .input-group label { 
-            transition: all 0.2s ease; 
-        }
-
-        .input-group:focus-within label { 
-            color: #007aff; 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 sm:p-12">
-    <div class="relative w-full max-w-3xl glass-card rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-700">
-        
-        <div id="successOverlay" class="absolute inset-0 z-50 bg-white/90 backdrop-blur-2xl flex flex-col items-center justify-center hidden opacity-0 transition-all duration-500">
-            <div class="pop-in flex flex-col items-center text-center px-10">
-                <div class="w-20 h-20 bg-[#007aff] text-white rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-200 mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <h3 class="text-3xl font-extrabold text-slate-900 mb-2">Admin Ditambahkan</h3>
-                <p class="text-slate-500 font-medium">Sistem telah diperbarui dengan personil baru.</p>
-                <button onclick="handleBackNavigation()" class="mt-8 px-12 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all active:scale-95">
-                    Selesai
-                </button>
-            </div>
-        </div>
+<body class="bg-[#F8FAFC] font-sans antialiased text-slate-800">
+    <div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100 blur-[120px] rounded-full opacity-50"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-100 blur-[120px] rounded-full opacity-50"></div>
+    </div>
 
-        <div class="px-8 sm:px-14 pt-16 pb-10 bg-white relative">
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-                        </span>
-                        
-                        <span class="text-[11px] font-bold tracking-[0.2em] text-blue-600 uppercase">Management</span>
-                    </div>
+    <div class="min-h-screen py-12 px-4 flex justify-center items-center">
+        <div class="w-full max-w-4xl bg-white/80 backdrop-blur-xl rounded-[3rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.08)] border border-white overflow-hidden transition-all duration-500 hover:shadow-blue-200/40">
+            
+            <div class="pt-10 pb-6 px-10 text-center">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 mb-4 bg-blue-50/50 rounded-full border border-blue-100 shadow-sm">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-[#1265A8]"></span>
+                    </span>
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-[#1265A8]">Secure Access</span>
                 </div>
-                <h2 class="text-slate-900 text-4xl sm:text-5xl font-extrabold tracking-tight">
-                    Add Admin<span class="text-blue-600">.</span>
+                <h2 class="text-3xl md:text-3xl font-black text-slate-900 tracking-tight uppercase">
+                    Register <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#1265A8] to-blue-400">New Admin</span>
                 </h2>
-                <div class="mt-8 h-[1px] w-full bg-slate-100"></div>
-            </div>
-        </div>
-
-        <form class="px-8 sm:px-14 pb-16 space-y-8" id="adminForm" onsubmit="handleFormSubmit(event)">
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="input-group space-y-2">
-                    <label class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block ml-1">Nama Lengkap</label>
-                    <input name="nama" type="text" placeholder="John Doe" 
-                        class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium input-glow" required>
-                </div>
-
-                <div class="input-group space-y-2">
-                    <label class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block ml-1">Username</label>
-                    <div class="relative">
-                        <span class="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 font-bold">@</span>
-                        <input name="username" type="text" placeholder="username" 
-                            class="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium input-glow" required>
-                    </div>
-                </div>
+                <div class="h-1 w-12 bg-gradient-to-r from-[#1265A8] to-blue-400 mx-auto mt-4 rounded-full"></div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="input-group space-y-2">
-                    <label class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block ml-1">Password</label>
-                    <input name="password" id="passInput" type="password" placeholder="••••••••" 
-                        class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium input-glow" required>
-                </div>
-
-                <div class="input-group space-y-2">
-                    <label class="text-[12px] font-bold text-slate-400 uppercase tracking-widest block ml-1">Konfirmasi</label>
-                    <input name="password_confirmation" id="confirmInput" type="password" placeholder="••••••••" 
-                        class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium input-glow" required>
-                </div>
-            </div>
-
-            <div class="pt-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div class="flex items-start gap-4 order-2 sm:order-1 max-w-[320px]">
-                    <div class="flex-shrink-0 w-11 h-11 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
+            <form action="{{ route('admin.store') }}" method="POST" class="p-8 lg:p-12 pt-6" id="addAdminForm">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="group">
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Lengkap</label>
+                        <input type="text" name="nama" class="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all duration-300 shadow-sm font-semibold" required placeholder="John Doe">
                     </div>
 
-                    <div class="flex flex-col gap-1">
-                        <h4 class="text-slate-950 text-[12px] font-extrabold tracking-[0.05em] uppercase flex items-center gap-2">
-                            Konfirmasi Keamanan
-                        </h4>
-                        
-                        <p class="text-slate-500 text-[13px] font-medium leading-[1.6] tracking-tight antialiased">
-                            Tinjau kembali data Anda. Perubahan hak akses sistem akan 
-                            <span class="text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded-md">langsung aktif</span> 
-                            setelah pendaftaran berhasil diverifikasi.
-                        </p>
+                    <div class="group">
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Username</label>
+                        <div class="relative">
+                            <span class="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-400">@</span>
+                            <input type="text" name="username" class="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all duration-300 shadow-sm font-semibold lowercase" required placeholder="johndoe">
+                        </div>
+                    </div>
+
+                    <div class="group md:col-span-2">
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Password</label>
+                        <input type="password" name="password" class="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all duration-300 shadow-sm font-semibold" required placeholder="••••••••">
+                    </div>
+
+                    <div class="group md:col-span-2 p-6 bg-slate-50 border border-slate-200 rounded-[2rem]">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Izin Edit (Can Edit)</h4>
+                                <p class="text-[11px] text-slate-500 mt-1">Jika aktif, admin ini dapat mengunggah dan mengubah data fasilitas, harga, dll.</p>
+                            </div>
+                            <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="can_edit" id="toggle" class="absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer z-10 transition-transform duration-300 ease-in-out left-0" onchange="this.classList.toggle('right-0'); this.classList.toggle('left-0'); this.classList.toggle('border-[#1265A8]'); this.nextElementSibling.classList.toggle('bg-[#1265A8]');" value="1">
+                                <label for="toggle" class="block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer transition-colors duration-300"></label>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="flex gap-4 w-full sm:w-auto order-1 sm:order-2">
-                    <button type="button" onclick="showModal()" 
-                        class="group relative px-10 py-4 rounded-2xl font-bold transition-all duration-500 active:scale-95">
-                        
-                        <div class="absolute inset-0 bg-slate-200/40 rounded-2xl border border-slate-200/50 backdrop-blur-sm transition-all duration-500 group-hover:bg-white group-hover:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.08)] group-hover:border-white"></div>
-                        
-                        <div class="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-md bg-gradient-to-tr from-slate-200/50 to-white/20"></div>
 
-                        <span class="relative z-10 text-[12px] uppercase tracking-[0.2em] text-slate-500 transition-colors duration-500 group-hover:text-slate-900">
-                            Batal
-                        </span>
+                <div class="flex flex-col sm:flex-row-reverse gap-4 pt-6 mt-4 border-t border-slate-100/50">
+                    <button type="submit" class="group relative w-full sm:w-2/3 overflow-hidden rounded-2xl bg-[#1265A8] px-8 py-5 transition-all duration-300 hover:bg-[#0d548a] hover:shadow-[0_20px_40px_-12px_rgba(18,101,168,0.35)] active:scale-[0.98]">
+                        <div class="relative flex items-center justify-center gap-3">
+                            <span class="text-sm font-black uppercase tracking-[0.2em] text-white">Buat Admin</span>
+                        </div>
                     </button>
-                    
-                    <button type="submit" id="btnTambah" class="min-w-[200px] relative flex items-center justify-center py-4 px-8 rounded-2xl font-bold text-white bg-[#007aff] hover:bg-[#0062cc] shadow-xl shadow-blue-100 transition-all text-sm uppercase tracking-widest active:scale-95">
-                        <span id="btnText">Daftarkan</span>
-                        <div id="btnLoading" class="hidden"><div class="spinner"></div></div>
-                    </button>
+                    <a href="{{ route('admin.active.list') }}" class="group w-full sm:w-1/3 flex items-center justify-center gap-2 py-5 px-8 rounded-2xl border-2 border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] transition-all">
+                        <span class="text-xs font-black uppercase tracking-widest text-slate-500">Batal</span>
+                    </a>
                 </div>
-            </div>
-        </form>
-    </div>
-
-    <div id="confirmModal" class="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
-        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-10 shadow-2xl scale-95 transition-all duration-300" id="modalContent">
-            <div class="text-center">
-                <h3 class="text-2xl font-extrabold text-slate-900 mb-2">Batalkan?</h3>
-                <p class="text-slate-500 font-medium mb-10 leading-relaxed">Input yang sudah Anda masukkan akan hilang.</p>
-                <div class="space-y-3">
-                    <button id="btnYaBatal" onclick="handleBackNavigation()" class="w-full py-4 rounded-2xl font-bold text-white bg-rose-500 hover:bg-rose-600 transition-all active:scale-95">Ya, Batalkan</button>
-                    <button onclick="hideModal()" class="w-full py-4 rounded-2xl font-bold text-slate-400 bg-slate-50 hover:bg-slate-100 transition-all">Lanjutkan Mengisi</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function handleFormSubmit(e) {
+        document.getElementById('addAdminForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const form = this;
+            const formData = new FormData(form);
             
-            // Ambil nilai input untuk validasi sederhana
-            const pass = document.getElementById('passInput').value;
-            const confirmPass = document.getElementById('confirmInput').value;
+            // convert can_edit to boolean properly
+            if (!formData.has('can_edit')) formData.append('can_edit', false);
 
-            // Validasi kecocokan password sebelum lanjut
-            if (pass !== confirmPass) {
-                showDynamicError("Konfirmasi password tidak cocok.");
-                return;
-            }
-
-            if (pass.length < 6) {
-                showDynamicError("Password minimal 6 karakter.");
-                return;
-            }
-
-            showConfirmDaftar();
-        }
-
-        // Fungsi Menampilkan Modal Konfirmasi Custom
-        function showConfirmDaftar() {
-            const modal = document.getElementById('confirmModal');
-            const modalContent = document.getElementById('modalContent');
-            
-            // Ubah teks modal untuk konfirmasi pendaftaran
-            modalContent.querySelector('h3').innerText = "Daftarkan Admin?";
-            modalContent.querySelector('p').innerText = "Pastikan data username dan hak akses sudah benar.";
-            
-            const btnYa = document.getElementById('btnYaBatal');
-            btnYa.innerText = "Ya, Daftarkan";
-            btnYa.className = "w-full py-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all active:scale-95";
-            
-            btnYa.onclick = eksekusiPendaftaran;
-
-            showModal();
-        }
-
-        function eksekusiPendaftaran() {
-            hideModal();
-
-            const btn = document.getElementById('btnTambah');
-            const btnText = document.getElementById('btnText');
-            const btnLoading = document.getElementById('btnLoading');
-            const overlay = document.getElementById('successOverlay');
-
-            // Tombol Loading
-            btn.disabled = true;
-            btnText.innerText = "Memproses...";
-            btnLoading.classList.remove('hidden');
-
-            // Ambil data form
-            const formData = new FormData(document.getElementById('adminForm'));
-
-            fetch("{{ route('admin.store') }}", {
-                method: "POST",
+            fetch(form.action, {
+                method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(async res => {
-                const data = await res.json();
-                if (!res.ok) {
-                    throw data;
-                }
-                return data;
-            })
+            .then(res => res.json())
             .then(data => {
-                if (data.success) {
-                    document.getElementById('adminForm').style.opacity = "0.3";
-                    overlay.classList.remove('hidden');
-                    setTimeout(() => { overlay.classList.add('opacity-100'); }, 50);
+                if(data.success) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: 'Admin baru telah ditambahkan.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        customClass: { popup: 'rounded-[2rem]' }
+                    }).then(() => {
+                        window.location.href = "{{ route('admin.active.list') }}";
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Terjadi kesalahan.', 'error');
                 }
             })
             .catch(err => {
-                console.log(err);
-
-                let messages = "";
-
-                if (err.errors) {
-                    Object.values(err.errors).forEach(msgArr => {
-                        msgArr.forEach(msg => {
-                            messages += "• " + msg + "<br>";
-                        });
-                    });
-                } else if (err.message) {
-                    messages = err.message;
-                } else {
-                    messages = "Terjadi kesalahan pada server.";
-                }
-
-                showDynamicError(messages);
-
-                btn.disabled = false;
-                btnText.innerText = "Daftarkan";
-                btnLoading.classList.add('hidden');
-            });
-          }
-        // Fungsi Navigasi Pintar (Untuk Tombol Batal & Selesai)
-        function handleBackNavigation() {
-            const btnYaBatal = document.getElementById('btnYaBatal');
-            if (btnYaBatal) {
-                btnYaBatal.innerHTML = '<div class="spinner mx-auto"></div>';
-            }
-
-            setTimeout(() => {
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.href = "/admin/dashboard";
-                }
-            }, 500);
-        }
-
-        // Fungsi Modal Batal
-        const modal = document.getElementById('confirmModal');
-        const modalContent = document.getElementById('modalContent');
-        
-        function showModal() { 
-            modal.classList.remove('hidden'); 
-            setTimeout(() => { 
-                modal.classList.add('opacity-100'); 
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100'); 
-            }, 10); 
-        }
-        
-        function hideModal() { 
-            modal.classList.remove('opacity-100'); 
-            modalContent.classList.remove('scale-100'); 
-            modalContent.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300); 
-        }
-
-        // Fitur Intip Password 
-        const passInputs = [document.getElementById('passInput'), document.getElementById('confirmInput')];
-        passInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                input.type = 'text';
-                clearTimeout(input.timeout);
-                input.timeout = setTimeout(() => { input.type = 'password'; }, 700);
+                console.error(err);
+                Swal.fire('Error', 'Gagal menambahkan admin', 'error');
             });
         });
-
-        function showDynamicError(message) {
-
-    // Hapus jika sudah ada
-    const old = document.getElementById("dynamicError");
-    if (old) old.remove();
-
-    const overlay = document.createElement("div");
-    overlay.id = "dynamicError";
-    overlay.style.position = "fixed";
-    overlay.style.inset = "0";
-    overlay.style.background = "rgba(15,23,42,0.5)";
-    overlay.style.backdropFilter = "blur(6px)";
-    overlay.style.display = "flex";
-    overlay.style.alignItems = "center";
-    overlay.style.justifyContent = "center";
-    overlay.style.zIndex = "9999";
-    overlay.style.opacity = "0";
-    overlay.style.transition = "0.3s";
-
-    const box = document.createElement("div");
-    box.style.background = "white";
-    box.style.padding = "40px";
-    box.style.borderRadius = "30px";
-    box.style.width = "380px";
-    box.style.maxWidth = "90%";
-    box.style.boxShadow = "0 25px 60px rgba(0,0,0,0.15)";
-    box.style.transform = "scale(0.9)";
-    box.style.transition = "0.3s";
-    box.style.textAlign = "center";
-
-    box.innerHTML = `
-        <div style="width:70px;height:70px;background:#fee2e2;color:#dc2626;
-            display:flex;align-items:center;justify-content:center;
-            border-radius:25px;margin:0 auto 20px auto;font-size:28px;">
-            !
-        </div>
-
-        <h3 style="font-size:22px;font-weight:800;margin-bottom:10px;color:#0f172a;">
-            Validasi Gagal
-        </h3>
-
-        <div style="font-size:14px;color:#475569;margin-bottom:25px;">
-            ${message}
-        </div>
-
-        <button id="closeDynamicError"
-            style="width:100%;padding:14px;border-radius:18px;
-            background:#ef4444;color:white;font-weight:700;border:none;cursor:pointer;">
-            Mengerti
-        </button>
-    `;
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    setTimeout(() => {
-        overlay.style.opacity = "1";
-        box.style.transform = "scale(1)";
-    }, 10);
-
-    document.getElementById("closeDynamicError").onclick = () => {
-        overlay.style.opacity = "0";
-        box.style.transform = "scale(0.9)";
-        setTimeout(() => overlay.remove(), 300);
-    };
-}
     </script>
 </body>
 </html>
