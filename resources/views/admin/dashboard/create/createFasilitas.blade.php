@@ -1313,12 +1313,17 @@
                     <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Labels / Fitur</label>
                     <div class="flex flex-wrap gap-2 mb-3">
                         <template x-for="label in labels[tipe]" :key="label">
-                            <label class="cursor-pointer">
-                                <input type="checkbox" name="labels[]" :value="label" x-model="selectedLabels" class="hidden">
-                                <span :class="selectedLabels.includes(label) ? 'bg-[#1d6fa5] text-white border-[#1d6fa5]' : 'bg-white text-slate-400 border-slate-200'"
-                                    class="px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all duration-300 block"
-                                    x-text="label"></span>
-                            </label>
+                            <div class="relative group/label">
+                                <label class="cursor-pointer">
+                                    <input type="checkbox" name="labels[]" :value="label" x-model="selectedLabels" class="hidden">
+                                    <span :class="selectedLabels.includes(label) ? 'bg-[#1d6fa5] text-white border-[#1d6fa5]' : 'bg-white text-slate-400 border-slate-200'"
+                                        class="relative px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all duration-300 inline-flex items-center"
+                                        x-text="label"></span>
+                                    <button type="button" @click="removeLabel(label)"
+                                        class="absolute inset-0 flex items-center justify-center bg-red-500/20 text-red-600 text-lg font-bold opacity-0 group-hover/label:opacity-100 transition-opacity duration-200 rounded-xl"
+                                        x-show="labels[tipe].length > 1">&times;</button>
+                                </label>
+                            </div>
                         </template>
                     </div>
                     <div class="flex gap-2">
@@ -1970,6 +1975,11 @@
                     if (!this.selectedLabels.includes(label))    this.selectedLabels.push(label);
                     this.customLabel = '';
                 }
+            },
+
+            removeLabel(label) {
+                this.labels[this.tipe] = this.labels[this.tipe].filter(l => l !== label);
+                this.selectedLabels = this.selectedLabels.filter(l => l !== label);
             },
 
             addNomorKamar(ri) {
