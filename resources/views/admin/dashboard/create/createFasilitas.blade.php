@@ -814,66 +814,93 @@
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Fasilitas Kamar</label>
                                     <div class="grid grid-cols-5 sm:grid-cols-5 gap-2">
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <template x-if="room.fasShow.ac"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">AC</span>
                                             <input type="number" x-model.number="room.fasilitas.ac" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5m0-5l-2 1m2-1l-2-1m2 1v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5m0 5l-2-1m2 1l2-1"/></svg>
+                                            <button type="button" @click="room.fasShow.ac = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.kipas_angin"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Kipas Angin</span>
                                             <input type="number" x-model.number="room.fasilitas.kipas_angin" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a1 1 0 001 1h16a1 1 0 001-1V7a1 1 0 00-1-1H4a1 1 0 00-1 1zm0 0l8 5 8-5M12 12l-8 5m8-5l8 5"/></svg>
+                                            <button type="button" @click="room.fasShow.kipas_angin = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.meja_kursi"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Meja & Kursi</span>
                                             <input type="number" x-model.number="room.fasilitas.meja_kursi" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                                            <button type="button" @click="room.fasShow.meja_kursi = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.lemari_locker"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Lemari / Locker</span>
                                             <input type="number" x-model.number="room.fasilitas.lemari_locker" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                            <button type="button" @click="room.fasShow.lemari_locker = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.stopkontak"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Stopkontak</span>
                                             <input type="number" x-model.number="room.fasilitas.stopkontak" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h16M4 20V4a2 2 0 012-2h12a2 2 0 012 2v16M4 20h16M8 12h8M8 8h8M8 16h4"/></svg>
+                                            <button type="button" @click="room.fasShow.stopkontak = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.kamar_mandi_dalam"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">K. Mandi Dalam</span>
                                             <input type="number" x-model.number="room.fasilitas.kamar_mandi_dalam" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                            <button type="button" @click="room.fasShow.kamar_mandi_dalam = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.water_heater"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Water Heater</span>
                                             <input type="number" x-model.number="room.fasilitas.water_heater" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                                            <button type="button" @click="room.fasShow.water_heater = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.bantal_set_sprei"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Bantal & Sprei</span>
                                             <input type="number" x-model.number="room.fasilitas.bantal_set_sprei" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m0 4v1m-6-7a2 2 0 00-2 2m0 4v1M6 21h6m-3-3v3"/></svg>
+                                            <button type="button" @click="room.fasShow.bantal_set_sprei = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.gantungan_baju"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Gantungan Baju</span>
                                             <input type="number" x-model.number="room.fasilitas.gantungan_baju" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                                            <button type="button" @click="room.fasShow.gantungan_baju = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.kaca_rias"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Kaca Rias</span>
                                             <input type="number" x-model.number="room.fasilitas.kaca_rias" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
+                                            <button type="button" @click="room.fasShow.kaca_rias = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        {{-- Custom Fasilitas --}}
+                                        <template x-for="(cf, cfIdx) in room.customFasilitas" :key="cfIdx">
+                                            <div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
+                                                <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center" x-text="cf.nama"></span>
+                                                <input type="number" x-model.number="cf.jumlah" min="0" placeholder="0"
+                                                    class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
+                                                <button type="button" @click="removeCustomFasilitas(rIdx, cfIdx)"
+                                                    class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="flex gap-2 mt-3">
+                                        <input type="text" x-model="room.customFasNama" @keydown.enter.prevent="addCustomFasilitas(rIdx)"
+                                            placeholder="Tambah fasilitas (contoh: Lampu)..."
+                                            class="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold outline-none focus:border-[#1d6fa5] transition-all">
+                                        <button type="button" @click="addCustomFasilitas(rIdx)"
+                                            class="px-4 py-2 bg-[#1d6fa5] text-white rounded-xl hover:bg-slate-800 transition-all font-black text-sm">+</button>
                                     </div>
                                 </div>
 
@@ -1124,66 +1151,93 @@
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Fasilitas Kamar</label>
                                     <div class="grid grid-cols-5 sm:grid-cols-5 gap-2">
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <template x-if="room.fasShow.ac"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">AC</span>
                                             <input type="number" x-model.number="room.fasilitas.ac" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5m0-5l-2 1m2-1l-2-1m2 1v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5m0 5l-2-1m2 1l2-1"/></svg>
+                                            <button type="button" @click="room.fasShow.ac = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.kipas_angin"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Kipas Angin</span>
                                             <input type="number" x-model.number="room.fasilitas.kipas_angin" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a1 1 0 001 1h16a1 1 0 001-1V7a1 1 0 00-1-1H4a1 1 0 00-1 1zm0 0l8 5 8-5M12 12l-8 5m8-5l8 5"/></svg>
+                                            <button type="button" @click="room.fasShow.kipas_angin = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.meja_kursi"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Meja & Kursi</span>
                                             <input type="number" x-model.number="room.fasilitas.meja_kursi" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                                            <button type="button" @click="room.fasShow.meja_kursi = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.lemari_locker"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Lemari / Locker</span>
                                             <input type="number" x-model.number="room.fasilitas.lemari_locker" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                            <button type="button" @click="room.fasShow.lemari_locker = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.stopkontak"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Stopkontak</span>
                                             <input type="number" x-model.number="room.fasilitas.stopkontak" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h16M4 20V4a2 2 0 012-2h12a2 2 0 012 2v16M4 20h16M8 12h8M8 8h8M8 16h4"/></svg>
+                                            <button type="button" @click="room.fasShow.stopkontak = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.kamar_mandi_dalam"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">K. Mandi Dalam</span>
                                             <input type="number" x-model.number="room.fasilitas.kamar_mandi_dalam" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                            <button type="button" @click="room.fasShow.kamar_mandi_dalam = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.water_heater"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Water Heater</span>
                                             <input type="number" x-model.number="room.fasilitas.water_heater" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                                            <button type="button" @click="room.fasShow.water_heater = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.bantal_set_sprei"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Bantal & Sprei</span>
                                             <input type="number" x-model.number="room.fasilitas.bantal_set_sprei" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m0 4v1m-6-7a2 2 0 00-2 2m0 4v1M6 21h6m-3-3v3"/></svg>
+                                            <button type="button" @click="room.fasShow.bantal_set_sprei = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.gantungan_baju"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Gantungan Baju</span>
                                             <input type="number" x-model.number="room.fasilitas.gantungan_baju" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                        </div>
-                                        <div class="flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <svg class="w-5 h-5 text-[#1d6fa5] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                                            <button type="button" @click="room.fasShow.gantungan_baju = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        <template x-if="room.fasShow.kaca_rias"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
                                             <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Kaca Rias</span>
                                             <input type="number" x-model.number="room.fasilitas.kaca_rias" min="0" placeholder="0"
                                                 class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outset-none font-bold text-xs">
-                                        </div>
+                                            <button type="button" @click="room.fasShow.kaca_rias = false"
+                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                        </div></template>
+                                        {{-- Custom Fasilitas --}}
+                                        <template x-for="(cf, cfIdx) in room.customFasilitas" :key="cfIdx">
+                                            <div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
+                                                <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center" x-text="cf.nama"></span>
+                                                <input type="number" x-model.number="cf.jumlah" min="0" placeholder="0"
+                                                    class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
+                                                <button type="button" @click="removeCustomFasilitas(rIdx, cfIdx)"
+                                                    class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="flex gap-2 mt-3">
+                                        <input type="text" x-model="room.customFasNama" @keydown.enter.prevent="addCustomFasilitas(rIdx)"
+                                            placeholder="Tambah fasilitas (contoh: Lampu)..."
+                                            class="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold outline-none focus:border-[#1d6fa5] transition-all">
+                                        <button type="button" @click="addCustomFasilitas(rIdx)"
+                                            class="px-4 py-2 bg-[#1d6fa5] text-white rounded-xl hover:bg-slate-800 transition-all font-black text-sm">+</button>
                                     </div>
                                 </div>
 
@@ -1320,7 +1374,7 @@
                                         class="relative px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all duration-300 inline-flex items-center"
                                         x-text="label"></span>
                                     <button type="button" @click="removeLabel(label)"
-                                        class="absolute inset-0 flex items-center justify-center bg-red-500/20 text-red-600 text-lg font-bold opacity-0 group-hover/label:opacity-100 transition-opacity duration-200 rounded-xl"
+                                        class="absolute top-0 right-0 bg-red-500/20 text-red-600 text-lg font-bold opacity-0 group-hover/label:opacity-100 transition-opacity duration-200 rounded-xl"
                                         x-show="labels[tipe].length > 1">&times;</button>
                                 </label>
                             </div>
@@ -1886,7 +1940,7 @@
             galleryPreviews: [null, null, null],
 
             jumlahKamar: 1,
-            rooms: [{ tipe: '', jumlah: 1, nomor_kamar: [], temp_input: '', kode_blok: '', max_dewasa: 1, max_anak: 0, fotoPreviews: [null, null, null], harga_harian: '', harga_mingguan: '', harga_bulanan: '', harga_tahunan: '', keunggulan: '', panjang: '', lebar: '', ranjang: '', fasilitas: { ac: 0, kipas_angin: 0, meja_kursi: 0, lemari_locker: 0, stopkontak: 0, kamar_mandi_dalam: 0, water_heater: 0, bantal_set_sprei: 0, gantungan_baju: 0, kaca_rias: 0 } }],
+            rooms: [{ tipe: '', jumlah: 1, nomor_kamar: [], temp_input: '', kode_blok: '', max_dewasa: 1, max_anak: 0, fotoPreviews: [null, null, null], harga_harian: '', harga_mingguan: '', harga_bulanan: '', harga_tahunan: '', keunggulan: '', panjang: '', lebar: '', ranjang: '', fasilitas: { ac: 0, kipas_angin: 0, meja_kursi: 0, lemari_locker: 0, stopkontak: 0, kamar_mandi_dalam: 0, water_heater: 0, bantal_set_sprei: 0, gantungan_baju: 0, kaca_rias: 0 }, fasShow: { ac: true, kipas_angin: true, meja_kursi: true, lemari_locker: true, stopkontak: true, kamar_mandi_dalam: true, water_heater: true, bantal_set_sprei: true, gantungan_baju: true, kaca_rias: true }, customFasilitas: [], customFasNama: '' }],
             currentRoomIndex: 0,
             roomTypes: @json($roomTypes->toArray()),
 
@@ -1927,7 +1981,7 @@
             initRooms() {
                 const target = this.jumlahKamar;
                 while (this.rooms.length < target) {
-                    this.rooms.push({ tipe: '', jumlah: 1, nomor_kamar: [], temp_input: '', kode_blok: '', max_dewasa: 1, max_anak: 0, fotoPreviews: [null, null, null], harga_harian: '', harga_mingguan: '', harga_bulanan: '', harga_tahunan: '', keunggulan: '', panjang: '', lebar: '', ranjang: '', fasilitas: { ac: 0, kipas_angin: 0, meja_kursi: 0, lemari_locker: 0, stopkontak: 0, kamar_mandi_dalam: 0, water_heater: 0, bantal_set_sprei: 0, gantungan_baju: 0, kaca_rias: 0 } });
+                    this.rooms.push({ tipe: '', jumlah: 1, nomor_kamar: [], temp_input: '', kode_blok: '', max_dewasa: 1, max_anak: 0, fotoPreviews: [null, null, null], harga_harian: '', harga_mingguan: '', harga_bulanan: '', harga_tahunan: '', keunggulan: '', panjang: '', lebar: '', ranjang: '', fasilitas: { ac: 0, kipas_angin: 0, meja_kursi: 0, lemari_locker: 0, stopkontak: 0, kamar_mandi_dalam: 0, water_heater: 0, bantal_set_sprei: 0, gantungan_baju: 0, kaca_rias: 0 }, fasShow: { ac: true, kipas_angin: true, meja_kursi: true, lemari_locker: true, stopkontak: true, kamar_mandi_dalam: true, water_heater: true, bantal_set_sprei: true, gantungan_baju: true, kaca_rias: true }, customFasilitas: [], customFasNama: '' });
                 }
                 while (this.rooms.length > target) {
                     this.rooms.pop();
@@ -1940,7 +1994,7 @@
 
             syncPaketHarian() {
                 const payload = this.rooms.map(r => {
-                    const { fotoPreviews, ...rest } = r;
+                    const { fotoPreviews, customFasNama, ...rest } = r;
                     return rest;
                 });
                 const el = document.getElementById('paketHarianInput');
@@ -1980,6 +2034,19 @@
             removeLabel(label) {
                 this.labels[this.tipe] = this.labels[this.tipe].filter(l => l !== label);
                 this.selectedLabels = this.selectedLabels.filter(l => l !== label);
+            },
+
+            addCustomFasilitas(ri) {
+                const room = this.rooms[ri];
+                if (!room || !room.customFasNama.trim()) return;
+                room.customFasilitas.push({ nama: room.customFasNama.trim(), jumlah: 1 });
+                room.customFasNama = '';
+            },
+
+            removeCustomFasilitas(ri, index) {
+                const room = this.rooms[ri];
+                if (!room) return;
+                room.customFasilitas.splice(index, 1);
             },
 
             addNomorKamar(ri) {
