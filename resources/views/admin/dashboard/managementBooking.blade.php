@@ -127,9 +127,9 @@
                         @php
                             $details  = $booking->selected_packages ?? [];
                             $duration = $details['duration']            ?? 1;
-                            $rooms    = $details['rooms_count']         ?? 1;
+                            $rooms    = $details['rooms']               ?? 1;
                             $adults   = $details['adults']              ?? 1;
-                            $children = $details['children_count']      ?? 0;
+                            $children = $details['children']            ?? 0;
                             $billable = $details['billable_children']   ?? 0;
                             $free     = $details['free_children']       ?? 0;
                             $totalBillable = $details['total_billable_guests'] ?? $adults;
@@ -376,9 +376,9 @@
                         @php
                             $details  = $booking->selected_packages ?? [];
                             $duration = $details['duration']            ?? 1;
-                            $rooms    = $details['rooms_count']         ?? 1;
+                            $rooms    = $details['rooms']               ?? 1;
                             $adults   = $details['adults']              ?? 1;
-                            $children = $details['children_count']      ?? 0;
+                            $children = $details['children']            ?? 0;
                             $billable = $details['billable_children']   ?? 0;
                             $free     = $details['free_children']       ?? 0;
                             $totalBillable = $details['total_billable_guests'] ?? $adults;
@@ -603,9 +603,9 @@
                         @php
                             $details  = $booking->selected_packages ?? [];
                             $duration = $details['duration']            ?? 1;
-                            $rooms    = $details['rooms_count']         ?? 1;
+                            $rooms    = $details['rooms']               ?? 1;
                             $adults   = $details['adults']              ?? 1;
-                            $children = $details['children_count']      ?? 0;
+                            $children = $details['children']            ?? 0;
                             $billable = $details['billable_children']   ?? 0;
                             $free     = $details['free_children']       ?? 0;
                             $totalBillable = $details['total_billable_guests'] ?? $adults;

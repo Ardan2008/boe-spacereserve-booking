@@ -65,6 +65,7 @@
         }
      }"
      @keydown.escape.window="lbOpen = false"
+     @open-detail-lb.window="openLightbox($event.detail.photos, $event.detail.idx)"
      class="pt-12 pb-20 px-4 md:px-6">
 
     <div class="max-w-4xl mx-auto">
@@ -80,7 +81,7 @@
         <div class="bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-slate-100 mb-8">
             {{-- Cover image --}}
             <div class="relative h-72 md:h-96 w-full overflow-hidden">
-                <img src="{{ asset('storage/fasilitas/' . $fasilitas->image) }}"
+                <img src="/storage/fasilitas/{{ $fasilitas->image }}"
                      alt="{{ $fasilitas->nama }}"
                      class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
@@ -151,12 +152,16 @@
                         @endif
                         {{-- Gallery --}}
                         @if($fasilitas->gallery && count($fasilitas->gallery))
+                        @php
+                            $galleryPhotos = array_map(fn($g) => '/storage/fasilitas/gallery/' . $g, $fasilitas->gallery);
+                            $galleryJson = json_encode($galleryPhotos);
+                        @endphp
                         <p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-3">Gallery</p>
                         <div class="grid grid-cols-3 gap-2">
-                            @foreach($fasilitas->gallery as $gimg)
-                            <img src="{{ asset('storage/fasilitas/gallery/' . $gimg) }}"
+                            @foreach($fasilitas->gallery as $gIdx => $gimg)
+                            <img src="/storage/fasilitas/gallery/{{ $gimg }}"
                                  alt="Gallery"
-                                 @click="openLightbox(['{{ asset('storage/fasilitas/gallery/' . $gimg) }}'], 0)"
+                                 @click="openLightbox({{ $galleryJson }}, {{ $gIdx }})"
                                  class="w-full h-24 object-cover rounded-xl border border-slate-100 hover:scale-105 transition-transform cursor-pointer shadow-sm">
                             @endforeach
                         </div>
@@ -185,7 +190,7 @@
                 $first = collect($raw)->first(fn($p) => $p);
                 for ($i = 0; $i < 3; $i++) {
                     $src = (!empty($raw[$i]) && trim($raw[$i])) ? $raw[$i] : $first;
-                    if ($src) $photos[] = asset('storage/fasilitas/rooms/' . $src);
+                    if ($src) $photos[] = '/storage/fasilitas/rooms/' . $src;
                 }
                 $photosJson = json_encode($photos);
                 $fas = $rt['fasilitas'] ?? [];
@@ -208,8 +213,7 @@
                          e.stopPropagation();
                          $dispatch('open-detail-lb', { photos: this.photos, idx: 0 });
                      }
-                 }"
-                 @open-detail-lb.window="openLightbox($event.detail.photos, $event.detail.idx)">
+                 }">
                 <div class="flex flex-col sm:flex-row">
 
                     {{-- ── Static photo thumbnail with hover blur + eye icon ── --}}

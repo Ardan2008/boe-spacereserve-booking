@@ -400,7 +400,7 @@ it('handles empty foto array gracefully on detail page', function () {
 
 // ── HTTP tests for edit page data (view data, bypasses auth middleware) ──
 
-it('passes foto array in rooms view data to edit view', function () {
+it('passes foto array and fotoPreviews in rooms view data to edit view', function () {
     $fasilitas = createFacilityWithPhotos();
 
     // Directly call the controller to get view data (bypasses auth middleware)
@@ -410,9 +410,13 @@ it('passes foto array in rooms view data to edit view', function () {
 
     expect($viewData['rooms'])->toBeArray();
     expect($viewData['rooms'][0]['foto'])->toBe(['f0.jpg', 'f1.jpg', 'f2.jpg']);
+    expect($viewData['rooms'][0]['fotoPreviews'])->toBeArray();
+    expect($viewData['rooms'][0]['fotoPreviews'][0])->toContain('storage/fasilitas/rooms/f0.jpg');
+    expect($viewData['rooms'][0]['fotoPreviews'][1])->toContain('storage/fasilitas/rooms/f1.jpg');
+    expect($viewData['rooms'][0]['fotoPreviews'][2])->toContain('storage/fasilitas/rooms/f2.jpg');
 });
 
-it('renders foto filenames in edit view JSON output', function () {
+it('renders foto filenames and fotoPreviews URLs in edit view JSON output', function () {
     $fasilitas = createFacilityWithPhotos();
 
     // Access the edit controller directly
@@ -425,7 +429,10 @@ it('renders foto filenames in edit view JSON output', function () {
     expect(str_contains($html, 'f1.jpg'))->toBeTrue();
     expect(str_contains($html, 'f2.jpg'))->toBeTrue();
 
-    // Verify the storage URL pattern exists in the rendered view
+    // Verify fotoPreviews key exists in the @json output (server-side pre-populated)
+    expect(str_contains($html, '"fotoPreviews"'))->toBeTrue();
+
+    // Verify the storage URL pattern exists somewhere in the rendered view
     expect(str_contains($html, 'storage/fasilitas/rooms/'))->toBeTrue();
 });
 
@@ -463,4 +470,72 @@ it('does not include fotoPreviews in stored paket_harian (syncPaketHarian destru
     expect($room)->toHaveKey('foto');
     expect($room)->not->toHaveKey('fotoPreviews');
     expect($room['foto'])->toBe(['clean_0.jpg']);
+});
+
+// ── Gallery tests ──
+
+it('stores gallery array correctly via model create', function () {
+    $fasilitas = Fasilitas::create([
+        'nama' => 'Gallery Test',
+        'tipe' => 'aula',
+        'deskripsi' => 'Gallery test',
+        'harga' => 0,
+        'image' => 'thumb.jpg',
+        'gallery' => ['gal_0.jpg', 'gal_1.jpg', 'gal_2.jpg'],
+    ]);
+
+    expect($fasilitas->gallery)->toBe(['gal_0.jpg', 'gal_1.jpg', 'gal_2.jpg']);
+});
+
+it('passes gallery data to edit view', function () {
+    $fasilitas = Fasilitas::create([
+        'nama' => 'Gallery Test',
+        'tipe' => 'aula',
+        'deskripsi' => 'Gallery test',
+        'harga' => 0,
+        'image' => 'thumb.jpg',
+        'gallery' => ['gal_0.jpg', 'gal_1.jpg'],
+    ]);
+
+    $controller = new \App\Http\Controllers\FasilitasController;
+    $view = $controller->edit($fasilitas->id);
+    $viewData = $view->getData();
+
+    expect($viewData['fasilitas']->gallery)->toBe(['gal_0.jpg', 'gal_1.jpg']);
+});
+
+it('renders gallery asset URLs in edit view', function () {
+    $fasilitas = Fasilitas::create([
+        'nama' => 'Gallery Test',
+        'tipe' => 'aula',
+        'deskripsi' => 'Gallery test',
+        'harga' => 0,
+        'image' => 'thumb.jpg',
+        'gallery' => ['gal_0.jpg', 'gal_1.jpg'],
+    ]);
+
+    $controller = new \App\Http\Controllers\FasilitasController;
+    $view = $controller->edit($fasilitas->id);
+    $html = $view->render();
+
+    expect(str_contains($html, 'storage/fasilitas/gallery/gal_0.jpg'))->toBeTrue();
+    expect(str_contains($html, 'storage/fasilitas/gallery/gal_1.jpg'))->toBeTrue();
+});
+
+it('renders gallery photos on the detail page', function () {
+    $fasilitas = Fasilitas::create([
+        'nama' => 'Gallery Test',
+        'tipe' => 'aula',
+        'deskripsi' => 'Gallery test',
+        'harga' => 0,
+        'image' => 'thumb.jpg',
+        'gallery' => ['gal_0.jpg', 'gal_1.jpg', 'gal_2.jpg'],
+    ]);
+
+    $response = $this->get(route('fasilitas.detail', $fasilitas->id));
+    $response->assertStatus(200);
+    $response->assertSee('gal_0.jpg', false);
+    $response->assertSee('gal_1.jpg', false);
+    $response->assertSee('gal_2.jpg', false);
+    $response->assertSee('storage/fasilitas/gallery/', false);
 });

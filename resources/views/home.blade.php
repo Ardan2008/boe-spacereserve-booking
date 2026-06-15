@@ -275,7 +275,7 @@
                         <div class="absolute inset-0 bg-[#1d6fa5]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
                         
                         {{-- Gunakan asset storage untuk gambar --}}
-                        <img src="{{ asset('storage/fasilitas/' . $item->image) }}" alt="{{ $item->nama }}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out">
+                        <img src="/storage/fasilitas/{{ $item->image }}" alt="{{ $item->nama }}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out">
                         
                         {{-- Price Tag --}}
                         <div class="absolute top-5 right-5 z-20">

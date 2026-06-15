@@ -337,9 +337,9 @@
                     
                     {{-- Bagian Gambar dengan Hover Zoom & Eye Icon --}}
                     <div class="relative h-52 overflow-hidden cursor-pointer" 
-                        @click="openPreview = true; previewImg = '{{ asset('storage/fasilitas/' . $item->image) }}'; previewTitle = '{{ $item->nama }}'; previewDesc = '{{ $item->deskripsi }}'">
-                        
-                        <img src="{{ asset('storage/fasilitas/' . $item->image) }}" 
+@click="openPreview = true; previewImg = '/storage/fasilitas/{{ $item->image }}'; previewTitle = '{{ $item->nama }}'; previewDesc = '{{ $item->deskripsi }}'">
+
+                        <img src="/storage/fasilitas/{{ $item->image }}" 
                             alt="{{ $item['nama'] }}" 
                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125 {{ $item->is_maintenance ? 'grayscale brightness-75' : '' }}">
                         

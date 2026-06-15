@@ -224,13 +224,16 @@ class BookingController extends Controller
             'tgl_selesai'      => $tgl_selesai,
             'package_type'     => $request->package_type,
             'selected_packages' => [
-                'duration'    => $duration,
-                'adults'      => $request->adults,
-                'children'    => $request->children_count ?? 0,
-                'rooms'       => $request->rooms_count,
-                'child_ages'  => $request->child_age ?? [],
-                'tipe_kamar'  => $request->selected_tipe ?? null,
-                'kode_blok'   => $request->selected_kode_blok ?? null,
+                'duration'              => $duration,
+                'adults'                => $request->adults,
+                'children'              => $request->children_count ?? 0,
+                'rooms'                 => $request->rooms_count,
+                'child_ages'            => $request->child_age ?? [],
+                'tipe_kamar'            => $request->selected_tipe ?? null,
+                'kode_blok'             => $request->selected_kode_blok ?? null,
+                'billable_children'     => $request->billable_children ?? 0,
+                'free_children'         => $request->free_children ?? 0,
+                'total_billable_guests' => $request->total_billable_guests ?? $request->adults,
             ],
             'total_harga' => $totalPrice,
             'status'      => 'pending',
@@ -531,7 +534,7 @@ class BookingController extends Controller
         }
 
         // Add 1 day to the current expired_at, or if null, from now
-        $newExpiry = $booking->expired_at ? $booking->expired_at->addDays(1) : now()->addDays(1);
+        $newExpiry = $booking->expired_at ? $booking->expired_at->copy()->addDays(1) : now()->addDays(1);
 
         $booking->update([
             'expired_at' => $newExpiry

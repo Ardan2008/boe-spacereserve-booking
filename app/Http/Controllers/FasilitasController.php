@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Fasilitas; 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Models\AuditLog;
@@ -28,7 +29,7 @@ class FasilitasController extends Controller
         return view('admin.dashboard.dataFasilitas', compact('facilities'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $fasilitas = Fasilitas::findOrFail($id);
 
@@ -157,7 +158,11 @@ class FasilitasController extends Controller
                 if ($file && $file->isValid()) {
                     // New upload for this slot — store on public disk under fasilitas/rooms
                     $name = time() . '_room_' . $roomIdx . '_' . $fotoIdx . '.' . $file->getClientOriginalExtension();
-                    $file->storeAs('fasilitas/rooms', $name, 'public');
+                    $destinationPath = public_path('storage/fasilitas/rooms');
+                    if (!File::exists($destinationPath)) {
+                        File::makeDirectory($destinationPath, 0755, true);
+                    }
+                    $file->move($destinationPath, $name);
                     $existingFoto[$fotoIdx] = $name;
                 }
                 // else: keep $existingFoto[$fotoIdx] as-is (preserve old path)
@@ -208,7 +213,7 @@ class FasilitasController extends Controller
         return redirect()->route('fasilitas.index')->with('success', 'Data berhasil diperbarui!');
     }
 
-    public function edit($id) {
+    public function edit(int $id) {
         $fasilitas = Fasilitas::findOrFail($id);
 
         $rooms = [];
@@ -219,6 +224,16 @@ class FasilitasController extends Controller
             foreach ($rooms as &$room) {
                 if (!isset($room['nomor_kamar'])) $room['nomor_kamar'] = [];
                 if (!isset($room['temp_input']))   $room['temp_input']  = '';
+                // Pre-populate fotoPreviews with asset() URLs so Alpine reactivity picks them up
+                $previews = [null, null, null];
+                if (isset($room['foto']) && is_array($room['foto'])) {
+                    foreach ($room['foto'] as $fi => $filename) {
+                        if ($filename) {
+                            $previews[$fi] = '/storage/fasilitas/rooms/' . $filename;
+                        }
+                    }
+                }
+                $room['fotoPreviews'] = $previews;
             }
             unset($room);
         } else {
@@ -233,6 +248,7 @@ class FasilitasController extends Controller
                     'max_dewasa' => $fasilitas->max_dewasa ?? 1,
                     'max_anak' => $fasilitas->max_anak ?? 0,
                     'foto' => [],
+                    'fotoPreviews' => [null, null, null],
                     'harga_harian' => $i === 0 ? $fasilitas->harga : '',
                     'harga_mingguan' => '',
                     'harga_bulanan' => $i === 0 ? $fasilitas->harga_bulanan : '',
@@ -262,7 +278,7 @@ class FasilitasController extends Controller
         return view('admin.dashboard.edit.editFasilitas', compact('fasilitas', 'rooms', 'roomTypes'));
     }
 
-    public function destroy($id) {
+    public function destroy(int $id) {
         $fasilitas = Fasilitas::findOrFail($id);
         if ($fasilitas->image) {
             Storage::delete('public/fasilitas/' . $fasilitas->image);
@@ -340,7 +356,11 @@ class FasilitasController extends Controller
                     foreach ($fotoFiles as $fotoIdx => $file) {
                         if ($file && $file->isValid()) {
                             $name = time() . '_room_' . $roomIdx . '_' . $fotoIdx . '.' . $file->getClientOriginalExtension();
-                            $file->storeAs('fasilitas/rooms', $name, 'public');
+                            $destinationPath = public_path('storage/fasilitas/rooms');
+                            if (!File::exists($destinationPath)) {
+                                File::makeDirectory($destinationPath, 0755, true);
+                            }
+                            $file->move($destinationPath, $name);
                             $fotos[$fotoIdx] = $name;
                         }
                     }
@@ -390,7 +410,7 @@ class FasilitasController extends Controller
                     ? (int) ($firstRoom['max_dewasa'] ?? 1)
                     : (int) $request->max_dewasa_aula,
                 'max_anak' => (int) ($firstRoom['max_anak'] ?? 0),
-                'max_durasi_harian' => $request->max_durasi_harian,
+            'max_durasi_harian' => $request->max_durasi_harian ? (int) $request->max_durasi_harian : null,
                 'max_durasi_hari' => $request->max_durasi_hari ? (int) $request->max_durasi_hari : null,
                 'max_durasi_minggu' => $request->max_durasi_minggu ? (int) $request->max_durasi_minggu : null,
                 'max_durasi_bulan' => $request->max_durasi_bulan ? (int) $request->max_durasi_bulan : null,
@@ -419,14 +439,14 @@ class FasilitasController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Fasilitas Store Error: ' . $e->getMessage());
+            Log::error('Fasilitas Store Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
             ], 500);
         }
     }
-    public function updatePaketHarian(Request $request, $id)
+    public function updatePaketHarian(Request $request, int $id)
     {
         $fasilitas = Fasilitas::findOrFail($id);
 
@@ -441,7 +461,7 @@ class FasilitasController extends Controller
         return redirect()->back()->with('success', 'Paket harian berhasil diperbarui!');
     }
 
-    public function storeMaintenance(Request $request, $id)
+    public function storeMaintenance(Request $request, int $id)
     {
         try {
             $request->validate([
@@ -513,7 +533,7 @@ class FasilitasController extends Controller
         }
     }
 
-    public function cancelMaintenance($id)
+    public function cancelMaintenance(int $id)
     {
         try {
             $fasilitas = Fasilitas::findOrFail($id);

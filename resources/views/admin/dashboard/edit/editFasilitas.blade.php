@@ -330,7 +330,7 @@
                             <div class="w-full">
                                 <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Thumbnail Cards</label>
                                 <div id="dropzone" class="relative overflow-hidden rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50/50 hover:border-[#1265A8] transition-all duration-500 h-48 flex items-center justify-center group/drop cursor-pointer">
-                                    <img id="preview" src="{{ $fasilitas->image ? asset('storage/fasilitas/' . $fasilitas->image) : '' }}" class="absolute inset-0 w-full h-full object-cover z-10" style="{{ $fasilitas->image ? '' : 'display:none' }}">
+                                    <img id="preview" src="{{ $fasilitas->image ? '/storage/fasilitas/' . $fasilitas->image : '' }}" class="absolute inset-0 w-full h-full object-cover z-10" style="{{ $fasilitas->image ? '' : 'display:none' }}">
                                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/drop:opacity-100 transition-opacity duration-300 z-20 flex flex-col items-center justify-center text-white">
                                         <span class="text-[10px] font-black uppercase tracking-widest">Change Photo</span>
                                     </div>
@@ -731,9 +731,9 @@
                 selectedLabels: @json($fasilitas->labels ?? []),
                 customLabel: '',
                 galleryPreviews: [
-                    @if(isset($fasilitas->gallery[0])) '{{ asset('storage/fasilitas/gallery/' . $fasilitas->gallery[0]) }}' @else null @endif,
-                    @if(isset($fasilitas->gallery[1])) '{{ asset('storage/fasilitas/gallery/' . $fasilitas->gallery[1]) }}' @else null @endif,
-                    @if(isset($fasilitas->gallery[2])) '{{ asset('storage/fasilitas/gallery/' . $fasilitas->gallery[2]) }}' @else null @endif
+                    @if(isset($fasilitas->gallery[0])) '/storage/fasilitas/gallery/{{ $fasilitas->gallery[0] }}' @else null @endif,
+                    @if(isset($fasilitas->gallery[1])) '/storage/fasilitas/gallery/{{ $fasilitas->gallery[1] }}' @else null @endif,
+                    @if(isset($fasilitas->gallery[2])) '/storage/fasilitas/gallery/{{ $fasilitas->gallery[2] }}' @else null @endif
                 ],
                 galleryErrors: [false, false, false],
 
