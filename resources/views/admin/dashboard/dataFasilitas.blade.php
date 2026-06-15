@@ -384,7 +384,7 @@
                                 
                                 <div x-data="{ active: {{ $item->is_maintenance ? 'true' : 'false' }} }"
                                     class="relative inline-flex items-center cursor-pointer"
-                                    @click="(() => { const a = active; if (!a) active = true; handleMaintenanceToggle({{ $item->id }}, '{{ addslashes($item->nama) }}', a); })()">
+                                    @click="handleMaintenanceToggle({{ $item->id }}, '{{ addslashes($item->nama) }}', active)">
                                     
                                     {{-- Track --}}
                                     <div class="w-10 h-5 rounded-full transition-all duration-300 relative"
