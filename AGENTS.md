@@ -48,11 +48,12 @@ php artisan test --filter=SomeTest  # single test
 
 | Path | Purpose |
 |---|---|
-| `routes/web.php` | All public & admin routes (271 lines, one file) |
+| `routes/web.php` | All public & admin routes (308 lines, one file) |
 | `routes/console.php` | Scheduled auto-expire task (every minute) |
 | `bootstrap/app.php` | Middleware alias registration |
 | `app/Http/Middleware/CheckAdminAccess.php` | Session-based admin guard |
 | `app/Models/` | 12 models: Booking, Fasilitas, Admins, Penyewa, JadwalBlokir, AuditLog, User, etc. |
+| `tests/Feature/FasilitasPhotoTest.php` | 7 tests (22 assertions) covering room photo lifecycle |
 
 ### Other config quirks
 - Session driver: `database` (dev), overridden to `array` in tests

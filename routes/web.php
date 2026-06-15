@@ -16,6 +16,7 @@ use App\Http\Controllers\ValidationController;
 use App\Http\Controllers\HomeController;
 
 // --- Helper: hitung stok kamar per tipe ---
+if (!function_exists('calculateRoomStock')) {
 function calculateRoomStock($fasilitas) {
     if ($fasilitas->tipe !== 'asrama' || !is_array($fasilitas->paket_harian)) {
         return $fasilitas;
@@ -124,6 +125,7 @@ function calculateRoomStock($fasilitas) {
 
     return $fasilitas;
 }
+} // end function_exists
 
 // --- JSON endpoint untuk polling stok ---
 Route::get('/api/fasilitas/{id}/room-stock', function ($id) {

@@ -1249,10 +1249,8 @@
         // Registered here so it is available on this page in addition to the
         // Create Fasilitas page. Both pages use the same component definition.
         document.addEventListener('alpine:init', () => {
-            Alpine.data('roomTypeDropdown', function () {
-                const el   = this.$el;
+            Alpine.data('roomTypeDropdown', (roomIndex, roomsVar) => {
                 const csrf = '{{ csrf_token() }}';
-
                 return {
                     open:         false,
                     addMode:      false,
@@ -1262,25 +1260,15 @@
                     saving:       false,
                     deleting:     null,
                     errorMessage: '',
-                    // Local reactive copy keeps the button label in sync
-                    // without depending on cross-component window.__alpineRoot.
                     selectedTipe: '',
 
-                    get rVar()  { return el.dataset.roomsVar; },
-                    get rIdx()  { return parseInt(el.dataset.roomIndex); },
+                    rVar: roomsVar,
+                    rIdx: roomIndex,
                     get hiddenName() { return `${this.rVar}[${this.rIdx}][tipe]`; },
 
                     init() {
                         const arr = window.__alpineRoot?.[this.rVar];
                         this.selectedTipe = arr?.[this.rIdx]?.tipe ?? '';
-
-                        // When the room slider changes, data-room-index is updated
-                        // reactively by Alpine; observe it to re-seed selectedTipe.
-                        const obs = new MutationObserver(() => {
-                            const a2 = window.__alpineRoot?.[this.rVar];
-                            this.selectedTipe = a2?.[this.rIdx]?.tipe ?? '';
-                        });
-                        obs.observe(el, { attributes: true, attributeFilter: ['data-room-index'] });
                     },
 
                     allTypes() {

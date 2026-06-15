@@ -1,7 +1,5 @@
 <div
-    x-data="roomTypeDropdown"
-    data-rooms-var="{{ $roomsVar }}"
-    x-bind:data-room-index="{{ $roomIndex }}"
+    x-data="roomTypeDropdown({{ $roomIndex }}, '{{ $roomsVar }}')"
     class="relative w-full"
     @click.outside="close()"
     @keydown.window.escape="handleEscape()"

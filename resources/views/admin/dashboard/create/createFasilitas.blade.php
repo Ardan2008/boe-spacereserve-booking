@@ -1914,7 +1914,7 @@
             galleryPreviews: [null, null, null],
 
             jumlahKamar: 1,
-            rooms: [{ tipe: '', jumlah: 1, nomor_kamar: [], temp_input: '', kode_blok: '', max_dewasa: 1, max_anak: 0, fotoPreviews: [null, null, null], harga_harian: '', harga_mingguan: '', harga_bulanan: '', harga_tahunan: '', keunggulan: '', panjang: '', lebar: '', ranjang: '', fasilitas: { ac: 0, kipas_angin: 0, meja_kursi: 0, lemari_locker: 0, stopkontak: 0, kamar_mandi_dalam: 0, water_heater: 0, bantal_set_sprei: 0, gantungan_baju: 0, kaca_rias: 0 }, fasShow: { ac: true, kipas_angin: true, meja_kursi: true, lemari_locker: true, stopkontak: true, kamar_mandi_dalam: true, water_heater: true, bantal_set_sprei: true, gantungan_baju: true, kaca_rias: true }, customFasilitas: [], customFasNama: '' }],
+            rooms: [{ tipe: '', jumlah: 1, nomor_kamar: [], temp_input: '', kode_blok: '', max_dewasa: 1, max_anak: 0, foto: [], fotoPreviews: [null, null, null], harga_harian: '', harga_mingguan: '', harga_bulanan: '', harga_tahunan: '', keunggulan: '', panjang: '', lebar: '', ranjang: '', fasilitas: { ac: 0, kipas_angin: 0, meja_kursi: 0, lemari_locker: 0, stopkontak: 0, kamar_mandi_dalam: 0, water_heater: 0, bantal_set_sprei: 0, gantungan_baju: 0, kaca_rias: 0 }, fasShow: { ac: true, kipas_angin: true, meja_kursi: true, lemari_locker: true, stopkontak: true, kamar_mandi_dalam: true, water_heater: true, bantal_set_sprei: true, gantungan_baju: true, kaca_rias: true }, customFasilitas: [], customFasNama: '' }],
             currentRoomIndex: 0,
             roomTypes: @json($roomTypes->toArray()),
 
@@ -1956,7 +1956,7 @@
             initRooms() {
                 const target = this.jumlahKamar;
                 while (this.rooms.length < target) {
-                    this.rooms.push({ tipe: '', jumlah: 1, nomor_kamar: [], temp_input: '', kode_blok: '', max_dewasa: 1, max_anak: 0, fotoPreviews: [null, null, null], harga_harian: '', harga_mingguan: '', harga_bulanan: '', harga_tahunan: '', keunggulan: '', panjang: '', lebar: '', ranjang: '', fasilitas: { ac: 0, kipas_angin: 0, meja_kursi: 0, lemari_locker: 0, stopkontak: 0, kamar_mandi_dalam: 0, water_heater: 0, bantal_set_sprei: 0, gantungan_baju: 0, kaca_rias: 0 }, fasShow: { ac: true, kipas_angin: true, meja_kursi: true, lemari_locker: true, stopkontak: true, kamar_mandi_dalam: true, water_heater: true, bantal_set_sprei: true, gantungan_baju: true, kaca_rias: true }, customFasilitas: [], customFasNama: '' });
+                    this.rooms.push({ tipe: '', jumlah: 1, nomor_kamar: [], temp_input: '', kode_blok: '', max_dewasa: 1, max_anak: 0, foto: [], fotoPreviews: [null, null, null], harga_harian: '', harga_mingguan: '', harga_bulanan: '', harga_tahunan: '', keunggulan: '', panjang: '', lebar: '', ranjang: '', fasilitas: { ac: 0, kipas_angin: 0, meja_kursi: 0, lemari_locker: 0, stopkontak: 0, kamar_mandi_dalam: 0, water_heater: 0, bantal_set_sprei: 0, gantungan_baju: 0, kaca_rias: 0 }, fasShow: { ac: true, kipas_angin: true, meja_kursi: true, lemari_locker: true, stopkontak: true, kamar_mandi_dalam: true, water_heater: true, bantal_set_sprei: true, gantungan_baju: true, kaca_rias: true }, customFasilitas: [], customFasNama: '' });
                 }
                 while (this.rooms.length > target) {
                     this.rooms.pop();
@@ -2090,10 +2090,8 @@
 
         }));
 
-        Alpine.data('roomTypeDropdown', function () {
-            const el   = this.$el;
+        Alpine.data('roomTypeDropdown', (roomIndex, roomsVar) => {
             const csrf = '{{ csrf_token() }}';
-
             return {
                 // ── State ──────────────────────────────────────────────────────
                 open:         false,   // dropdown panel visibility
@@ -2109,22 +2107,13 @@
                 selectedTipe: '',
 
                 // ── Data bridge ────────────────────────────────────────────────
-                get rVar()  { return el.dataset.roomsVar; },
-                get rIdx()  { return parseInt(el.dataset.roomIndex); },
+                rVar: roomsVar,
+                rIdx: roomIndex,
                 get hiddenName() { return `${this.rVar}[${this.rIdx}][tipe]`; },
 
                 init() {
-                    // Seed selectedTipe from the parent rooms array on mount
                     const arr = window.__alpineRoot?.[this.rVar];
                     this.selectedTipe = arr?.[this.rIdx]?.tipe ?? '';
-
-                    // Observe attribute changes so selectedTipe stays correct
-                    // when the room slider changes the active slot (ri changes).
-                    const obs = new MutationObserver(() => {
-                        const a2 = window.__alpineRoot?.[this.rVar];
-                        this.selectedTipe = a2?.[this.rIdx]?.tipe ?? '';
-                    });
-                    obs.observe(el, { attributes: true, attributeFilter: ['data-room-index'] });
                 },
 
                 // ── Core access ────────────────────────────────────────────────
@@ -2137,13 +2126,10 @@
                 },
 
                 setTipe(val) {
-                    // Update local reactive copy first (triggers DOM re-render immediately)
                     this.selectedTipe = val;
-                    // Then sync to the parent rooms array
                     const arr = window.__alpineRoot?.[this.rVar];
                     if (arr?.[this.rIdx] !== undefined) {
                         arr[this.rIdx].tipe = val;
-                        // Notify parent to re-run syncPaketHarian
                         if (window.__alpineRoot?.syncPaketHarian) {
                             window.__alpineRoot.syncPaketHarian();
                         }
