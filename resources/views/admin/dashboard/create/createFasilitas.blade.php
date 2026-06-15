@@ -795,7 +795,7 @@
                                                 <input type="file" accept="image/*"
                                                     :name="'room_fotos[' + rIdx + '][' + fIdx + ']'"
                                                     class="room-foto-input absolute inset-0 opacity-0 cursor-pointer z-30"
-                                                    @change="handleRoomFoto($event, rIdx, fIdx)">
+                                                    @change="window.handleRoomFoto($event, rIdx, fIdx)">
                                             </div>
                                         </template>
                                     </div>
@@ -1123,7 +1123,7 @@
                                                 <input type="file" accept="image/*"
                                                     :name="'room_fotos[' + rIdx + '][' + fIdx + ']'"
                                                     class="room-foto-input absolute inset-0 opacity-0 cursor-pointer z-30"
-                                                    @change="handleRoomFoto($event, rIdx, fIdx)">
+                                                    @change="window.handleRoomFoto($event, rIdx, fIdx)">
                                             </div>
                                         </template>
                                     </div>
@@ -1701,16 +1701,29 @@
             return true;
         };
 
-        /* ── ROOM FOTO VALIDATION ── */
-        window.validateRoomFoto = function (input, fotoIndex) {
-            const file = input.files[0];
-            if (file && file.size > MAX_FILE_SIZE) {
+        /* ── ROOM FOTO HANDLER ── */
+        window.handleRoomFoto = function (event, roomIndex, fotoIndex) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > MAX_FILE_SIZE) {
                 showToast('warning', `Foto kamar ${fotoIndex + 1} terlalu besar`,
                     `Ukuran (${formatBytes(file.size)}) melebihi batas 2MB.`);
-                input.value = '';
-                return false;
+                event.target.value = '';
+                return;
             }
-            return true;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                var root = window.__alpineRoot;
+                if (root && root.rooms && root.rooms[roomIndex]) {
+                    if (!root.rooms[roomIndex].fotoPreviews) {
+                        root.rooms[roomIndex].fotoPreviews = [null, null, null];
+                    }
+                    root.rooms[roomIndex].fotoPreviews[fotoIndex] = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
         };
 
         /* ── FORM SUBMIT ── */
@@ -2062,33 +2075,6 @@
                 this.syncPaketHarian();
             },
 
-            handleRoomFoto(event, roomIndex, fotoIndex) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const MAX = 2 * 1024 * 1024;
-                if (file.size > MAX) {
-                    Swal.fire({
-                        title: 'File Terlalu Besar',
-                        text: 'Foto kamar maksimal 2 MB.',
-                        icon: 'warning',
-                        confirmButtonColor: '#1265A8',
-                        confirmButtonText: 'OK',
-                        customClass: { popup: 'rounded-[2.5rem] p-8' }
-                    });
-                    event.target.value = '';
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    if (!this.rooms[roomIndex].fotoPreviews) {
-                        this.rooms[roomIndex].fotoPreviews = [null, null, null];
-                    }
-                    this.rooms[roomIndex].fotoPreviews[fotoIndex] = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            },
         }));
 
         Alpine.data('roomTypeDropdown', function () {
