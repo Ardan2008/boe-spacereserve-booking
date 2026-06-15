@@ -210,6 +210,10 @@ class BookingController extends Controller
             'foto_identitas' => $identitasPath,
         ]);
 
+        $expiredAt = strtoupper($request->provinsi ?? '') === 'JAWA TIMUR'
+            ? now()->addDay()
+            : now()->addDays(3);
+
         $booking = \App\Models\Booking::create([
             'penyewa_id'       => $penyewa->id,
             'fasilitas_id'     => $request->fasilitas_id,
@@ -230,6 +234,7 @@ class BookingController extends Controller
             ],
             'total_harga' => $totalPrice,
             'status'      => 'pending',
+            'expired_at'  => $expiredAt,
         ]);
 
         return response()->json([
@@ -242,6 +247,13 @@ class BookingController extends Controller
     public function approve($id)
     {
         $booking = \App\Models\Booking::with(['penyewa', 'fasilitas'])->findOrFail($id);
+
+        if ($booking->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking ini sudah diproses sebelumnya (status: ' . $booking->status . ').'
+            ], 422);
+        }
 
         // --- AUTO-ALLOCATE ROOMS on approval if not yet allocated ---
         $updateData = [];
@@ -599,7 +611,7 @@ class BookingController extends Controller
         
         // Simple logic for cost update
         // Use daily rate for extensions
-        $extraCost = $days * $booking->fasilitas->harga;
+        $extraCost = $days * ($booking->fasilitas->harga ?? 0);
 
         $booking->update([
             'tgl_selesai' => $newEnd->format('Y-m-d'),

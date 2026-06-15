@@ -793,18 +793,9 @@
                                                     </svg>
                                                 </div>
                                                 <input type="file" accept="image/*"
-                                                    :name="'rooms[' + rIdx + '][foto_' + fIdx + ']'"
+                                                    :name="'room_fotos[' + rIdx + '][' + fIdx + ']'"
                                                     class="room-foto-input absolute inset-0 opacity-0 cursor-pointer z-30"
-                                                    @change="
-                                                        if (window.validateRoomFoto($event.target, fIdx)) {
-                                                            const file = $event.target.files[0];
-                                                            if (file) {
-                                                                const reader = new FileReader();
-                                                                reader.onload = (e) => { rooms[rIdx].fotoPreviews[fIdx] = e.target.result; };
-                                                                reader.readAsDataURL(file);
-                                                            }
-                                                        }
-                                                    ">
+                                                    @change="handleRoomFoto($event, rIdx, fIdx)">
                                             </div>
                                         </template>
                                     </div>
@@ -1130,18 +1121,9 @@
                                                     </svg>
                                                 </div>
                                                 <input type="file" accept="image/*"
-                                                    :name="'rooms[' + rIdx + '][foto_' + fIdx + ']'"
+                                                    :name="'room_fotos[' + rIdx + '][' + fIdx + ']'"
                                                     class="room-foto-input absolute inset-0 opacity-0 cursor-pointer z-30"
-                                                    @change="
-                                                        if (window.validateRoomFoto($event.target, fIdx)) {
-                                                            const file = $event.target.files[0];
-                                                            if (file) {
-                                                                const reader = new FileReader();
-                                                                reader.onload = (e) => { rooms[rIdx].fotoPreviews[fIdx] = e.target.result; };
-                                                                reader.readAsDataURL(file);
-                                                            }
-                                                        }
-                                                    ">
+                                                    @change="handleRoomFoto($event, rIdx, fIdx)">
                                             </div>
                                         </template>
                                     </div>
@@ -1844,6 +1826,10 @@
         });
 
         function eksekusiSimpanData() {
+            // Sync latest room data to hidden inputs before serializing
+            if (window.__alpineRoot?.syncPaketHarian) {
+                window.__alpineRoot.syncPaketHarian();
+            }
             const form      = $('mainForm');
             const formData  = new FormData(form);
             const overlay   = $('loadingOverlay');
@@ -1964,6 +1950,7 @@
                             r.nomor_kamar.splice(r.jumlah);
                         }
                     });
+                    this.syncPaketHarian();
                 }, { deep: true });
                 document.addEventListener('kamar-changed', (e) => {
                     this.jumlahKamar = e.detail.value;
@@ -1994,7 +1981,11 @@
 
             syncPaketHarian() {
                 const payload = this.rooms.map(r => {
-                    const { fotoPreviews, customFasNama, ...rest } = r;
+                    const { fotoPreviews, customFasNama, fasShow, temp_input, ...rest } = r;
+                    rest.harga_harian   = rest.harga_harian   !== '' && rest.harga_harian   != null ? Number(rest.harga_harian)   : 0;
+                    rest.harga_mingguan = rest.harga_mingguan !== '' && rest.harga_mingguan != null ? Number(rest.harga_mingguan) : 0;
+                    rest.harga_bulanan  = rest.harga_bulanan  !== '' && rest.harga_bulanan  != null ? Number(rest.harga_bulanan)  : 0;
+                    rest.harga_tahunan  = rest.harga_tahunan  !== '' && rest.harga_tahunan  != null ? Number(rest.harga_tahunan)  : 0;
                     return rest;
                 });
                 const el = document.getElementById('paketHarianInput');
@@ -2069,6 +2060,34 @@
                     room.temp_input = removed[0];
                 }
                 this.syncPaketHarian();
+            },
+
+            handleRoomFoto(event, roomIndex, fotoIndex) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const MAX = 2 * 1024 * 1024;
+                if (file.size > MAX) {
+                    Swal.fire({
+                        title: 'File Terlalu Besar',
+                        text: 'Foto kamar maksimal 2 MB.',
+                        icon: 'warning',
+                        confirmButtonColor: '#1265A8',
+                        confirmButtonText: 'OK',
+                        customClass: { popup: 'rounded-[2.5rem] p-8' }
+                    });
+                    event.target.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (!this.rooms[roomIndex].fotoPreviews) {
+                        this.rooms[roomIndex].fotoPreviews = [null, null, null];
+                    }
+                    this.rooms[roomIndex].fotoPreviews[fotoIndex] = e.target.result;
+                };
+                reader.readAsDataURL(file);
             },
         }));
 

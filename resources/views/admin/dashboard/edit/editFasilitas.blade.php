@@ -881,7 +881,7 @@
 
                 syncPaketHarian() {
                     const payload = this.rooms.map(r => {
-                        const { fotoPreviews, customFasNama, ...rest } = r;
+                        const { fotoPreviews, customFasNama, fasShow, temp_input, ...rest } = r;
                         // Ensure prices are stored as numbers, not empty strings
                         rest.harga_harian   = rest.harga_harian   !== '' && rest.harga_harian   != null ? Number(rest.harga_harian)   : 0;
                         rest.harga_mingguan = rest.harga_mingguan !== '' && rest.harga_mingguan != null ? Number(rest.harga_mingguan) : 0;

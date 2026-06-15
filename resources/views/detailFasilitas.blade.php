@@ -395,21 +395,25 @@
              class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
             <div class="relative max-w-3xl w-full">
                 {{-- Track --}}
-                <div class="overflow-hidden rounded-[2rem] bg-gray-900 shadow-2xl relative">
+                <div class="relative overflow-hidden rounded-[2rem] bg-gray-900 shadow-2xl flex items-center justify-center" style="min-height: 55vh;">
                     <button @click="lbOpen = false"
                         class="absolute top-3 right-3 z-10 p-2 bg-black/50 rounded-full text-white hover:bg-red-600 hover:text-white transition-all shadow-lg">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
-                    <div class="flex transition-all duration-500 ease-in-out"
-                         :style="'transform: translateX(-' + (lbIdx * 100) + '%)'">
-                        <template x-for="(src, si) in (lbPhotos || [])" :key="si">
-                            <div style="min-width:100%; flex-shrink:0">
-                                <img :src="src" class="w-full max-h-[75vh] object-contain mx-auto select-none">
-                            </div>
-                        </template>
-                    </div>
+                    <template x-for="(src, si) in (lbPhotos || [])" :key="si">
+                        <div x-show="si === lbIdx"
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute inset-0">
+                            <img :src="src" class="w-full h-full object-cover select-none">
+                        </div>
+                    </template>
                 </div>
                 {{-- Navigation --}}
                 <div class="flex justify-center items-center gap-4 mt-5">

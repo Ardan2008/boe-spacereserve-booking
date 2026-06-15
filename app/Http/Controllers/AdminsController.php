@@ -71,7 +71,7 @@ class AdminsController extends Controller
         $request->session()->forget(['id_log', 'nama', 'role', 'can_edit']);
         $request->session()->flush();
 
-        return redirect()->route('login');
+        return redirect()->route('formLogin');
     }
 
     public function store(Request $request)
@@ -119,8 +119,7 @@ class AdminsController extends Controller
             }
 
             $admin->update([
-                // isi field kamu
-                'name' => $request->name,
+                'nama' => $request->nama,
             ]);
 
             return response()->json([
@@ -155,10 +154,10 @@ class AdminsController extends Controller
         $totalPenyewa = Booking::where('status', 'confirmed')->count();
 
         // 2. Ambil data untuk Chart Fasilitas
-        $fasilitas = Fasilitas::withCount('booking')->get();
+        $fasilitas = Fasilitas::withCount('bookings')->get();
 
         // Label: Nama Fasilitas
-        $labelsFasilitas = $fasilitas->pluck('nama_fasilitas')->toArray();
+        $labelsFasilitas = $fasilitas->pluck('nama')->toArray();
 
         // Data: Jumlah booking per fasilitas
         $dataBookingPerFasilitas = $fasilitas->pluck('booking_count')->toArray();

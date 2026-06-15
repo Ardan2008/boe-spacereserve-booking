@@ -79,7 +79,7 @@
     
     <main class="max-w-6xl mx-auto px-4 pt-12 pb-12" 
         x-data="scheduleManager({
-            facilities: {{ $facilities->toJson() }},
+            facilities: @json($facilities ?? []),
             initialFasilitasId: {{ $selectedFasilitasId ?? 'null' }}
         })"
         x-cloak>
@@ -299,7 +299,7 @@
                     </div>
                     
                     <div class="relative z-10 shrink-0">
-                        <a :href="'{{ route('formBooking') }}?id=' + selectedId" 
+                        <a :href="selectedId ? '{{ route('formBooking') }}?id=' + selectedId : '#'" 
                             class="px-12 py-6 bg-white text-[#1265A8] font-black rounded-[2rem] shadow-[0_20px_40px_rgba(255,255,255,0.2)] hover:bg-slate-900 hover:text-white hover:-translate-y-2 transition-all active:scale-95 text-xs uppercase tracking-[0.3em] flex items-center gap-4 group/btn">
                             Booking Room Ini
                             <svg class="w-5 h-5 group-hover/btn:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>

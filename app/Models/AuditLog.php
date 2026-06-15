@@ -25,7 +25,7 @@ class AuditLog extends Model
     public static function catat(string $aksi, string $deskripsi, array $extra = []): self
     {
         return self::create(array_merge([
-            'admin_nama'     => session('admin_nama') ?? session('nama') ?? 'Sistem',
+            'admin_nama'     => session('nama') ?? 'Sistem',
             'admin_role'     => session('role') ?? '-',
             'aksi'           => $aksi,
             'deskripsi'      => $deskripsi,
