@@ -87,16 +87,6 @@
             overflow: hidden;
         }
 
-        @keyframes scroll-dot {
-            0% { transform: translateY(0); opacity: 1; }
-            50% { transform: translateY(10px); opacity: 0.5; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-
-        .animate-scroll-dot {
-            animation: scroll-dot 2s infinite ease-in-out;
-        }
-
         /* Class tambahan untuk trigger menghilang */
         .hide-indicator {
             opacity: 0 !important;
@@ -477,6 +467,7 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
     // Inisialisasi AOS
@@ -912,8 +903,7 @@
         }
     });
 </script>
-<!-- SweetAlert2 CDN -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <div id="descModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white w-full max-w-2xl rounded-[3rem] overflow-y-auto max-h-[90vh] shadow-2xl transform transition-all scale-95 opacity-0 duration-300" id="modalContent">

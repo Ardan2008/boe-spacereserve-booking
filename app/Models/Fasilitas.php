@@ -40,7 +40,7 @@ class Fasilitas extends Model
 
     public function bookings()
     {
-        return $this->hasMany(\App\Models\Booking::class, 'fasilitas_id');
+        return $this->hasMany(Booking::class, 'fasilitas_id');
     }
 
     public function histories()

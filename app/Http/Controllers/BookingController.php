@@ -22,7 +22,7 @@ class BookingController extends Controller
             $response = Http::asForm()->post(
                 'https://www.google.com/recaptcha/api/siteverify',
                 [
-                    'secret'   => env('RECAPTCHA_SECRET_KEY'),
+                    'secret'   => config('services.recaptcha.secret_key'),
                     'response' => $request->input('g-recaptcha-response'),
                     'remoteip' => $request->ip(),
                 ]
@@ -64,13 +64,13 @@ class BookingController extends Controller
             $totalPrice = $duration * $fasilitas->harga * 7;
             $tgl_selesai = \Carbon\Carbon::parse($tgl_mulai)->addWeeks($duration)->subDay()->format('Y-m-d');
         } elseif ($request->package_type === 'bulanan') {
-            if (!$fasilitas->harga_bulanan) {
+            if (is_null($fasilitas->harga_bulanan)) {
                 return response()->json(['success' => false, 'message' => 'Fasilitas ini tidak mendukung paket bulanan.'], 422);
             }
             $totalPrice = $duration * $fasilitas->harga_bulanan;
             $tgl_selesai = \Carbon\Carbon::parse($tgl_mulai)->addMonths($duration)->subDay()->format('Y-m-d');
         } elseif ($request->package_type === 'tahunan') {
-            $hargaTahunan = $fasilitas->harga_bulanan ? $fasilitas->harga_bulanan * 12 : $fasilitas->harga * 365;
+            $hargaTahunan = !is_null($fasilitas->harga_bulanan) ? $fasilitas->harga_bulanan * 12 : $fasilitas->harga * 365;
             $totalPrice = $duration * $hargaTahunan;
             $tgl_selesai = \Carbon\Carbon::parse($tgl_mulai)->addYears($duration)->subDay()->format('Y-m-d');
         }
@@ -449,8 +449,8 @@ class BookingController extends Controller
                     ? implode(', ', $booking->nomor_kamar)
                     : ($booking->nomor_kamar ?? '-'),
                 'allocated_rooms' => $booking->allocated_rooms ?? [],
-                'created_at' => $booking->created_at?->format('d F Y, H:i') . ' WIB' ?? '-',
-                'checkin_at' => $booking->checkin_at?->format('d F Y, H:i') . ' WIB' ?? null,
+                'created_at' => $booking->created_at ? $booking->created_at->format('d F Y, H:i') . ' WIB' : '-',
+                'checkin_at' => $booking->checkin_at ? $booking->checkin_at->format('d F Y, H:i') . ' WIB' : null,
                 'foto_identitas' => $foto_identitas_url
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -494,7 +494,7 @@ class BookingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Hanya booking yang sudah disetujui yang dapat dibatalkan.'
-            ]);
+            ], 422);
         }
         
         $booking->update([

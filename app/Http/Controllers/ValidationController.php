@@ -35,31 +35,32 @@ class ValidationController extends Controller
 
         $base = $this->baileysBase();
         $cacheKey = 'wa_valid_' . $nomor;
-        return Cache::remember($cacheKey, 600, function () use ($nomor, $base) {
+        $data = Cache::remember($cacheKey, 600, function () use ($nomor, $base) {
             try {
                 $res = Http::timeout(5)->get($base . '/check', [
                     'nomor' => $nomor,
                 ]);
 
                 if (!$res->successful()) {
-                    return response()->json(['valid' => true, 'message' => 'Tidak dapat memverifikasi (format valid)']);
+                    return ['valid' => true, 'message' => 'Tidak dapat memverifikasi (format valid)'];
                 }
 
                 $data = $res->json();
 
                 // Jika Baileys tidak terhubung (blum scan QR), jangan blokir user
                 if (($data['status'] ?? '') !== 'connected') {
-                    return response()->json(['valid' => true, 'message' => 'Format valid (cek aktifitas tidak tersedia)']);
+                    return ['valid' => true, 'message' => 'Format valid (cek aktifitas tidak tersedia)'];
                 }
 
-                return response()->json([
+                return [
                     'valid'   => $data['valid'] ?? false,
                     'message' => $data['message'] ?? 'Tidak terverifikasi',
-                ]);
+                ];
             } catch (\Throwable $e) {
-                return response()->json(['valid' => true, 'message' => 'Tidak dapat memverifikasi (format valid)']);
+                return ['valid' => true, 'message' => 'Tidak dapat memverifikasi (format valid)'];
             }
         });
+        return response()->json($data);
     }
 
     /**
@@ -79,7 +80,7 @@ class ValidationController extends Controller
         $domain = substr(strrchr($email, '@'), 1);
 
         $cacheKey = 'email_valid_' . md5($email);
-        return Cache::remember($cacheKey, 3600, function () use ($email, $domain) {
+        $data = Cache::remember($cacheKey, 3600, function () use ($email, $domain) {
             try {
                 $mxOk = checkdnsrr($domain, 'MX');
 
@@ -92,26 +93,27 @@ class ValidationController extends Controller
                 $isDisposable = in_array(strtolower($domain), $disposableDomains, true);
 
                 if (!$mxOk) {
-                    return response()->json([
+                    return [
                         'valid' => false,
                         'message' => 'Domain email tidak memiliki server penerima (MX)',
-                    ]);
+                    ];
                 }
 
                 if ($isDisposable) {
-                    return response()->json([
+                    return [
                         'valid' => false,
                         'message' => 'Email sementara (disposable) tidak diperbolehkan',
-                    ]);
+                    ];
                 }
 
-                return response()->json([
+                return [
                     'valid' => true,
                     'message' => 'Email aktif dan dapat menerima pesan ✓',
-                ]);
+                ];
             } catch (\Throwable $e) {
-                return response()->json(['valid' => true, 'message' => 'Format valid (cek aktifitas tidak tersedia)']);
+                return ['valid' => true, 'message' => 'Format valid (cek aktifitas tidak tersedia)'];
             }
         });
+        return response()->json($data);
     }
 }

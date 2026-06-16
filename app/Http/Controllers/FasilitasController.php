@@ -348,8 +348,9 @@ class FasilitasController extends Controller
             if (!is_array($paket_harian)) $paket_harian = [];
 
             // Handle Room Photos — merge uploaded files into each room's foto array
-            if ($request->hasFile('room_fotos')) {
-                foreach ($request->file('room_fotos') as $roomIdx => $fotoFiles) {
+            $roomFotoFiles = $request->file('room_fotos');
+            if (is_array($roomFotoFiles)) {
+                foreach ($roomFotoFiles as $roomIdx => $fotoFiles) {
                     if (!isset($paket_harian[$roomIdx])) continue;
                     $fotos = $paket_harian[$roomIdx]['foto'] ?? [];
                     $fotos = is_array($fotos) ? $fotos : [];

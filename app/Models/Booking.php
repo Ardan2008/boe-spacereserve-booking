@@ -27,7 +27,7 @@ class Booking extends Model
         'expired_at'        => 'datetime',
         'checkin_at'        => 'datetime',
         'allocated_rooms'   => 'array',
-        'nomor_kamar'       => 'array',
+        'nomor_kamar'       => 'string',
         'selected_packages' => 'array',
         'tgl_mulai'         => 'date',
         'tgl_selesai'       => 'date',
@@ -41,5 +41,10 @@ class Booking extends Model
     public function fasilitas()
     {
         return $this->belongsTo(Fasilitas::class);
+    }
+
+    public function tipeKamar()
+    {
+        return $this->belongsTo(GlobalRoomType::class, 'tipe_kamar_id');
     }
 }

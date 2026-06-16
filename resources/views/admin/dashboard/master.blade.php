@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        [x-cloak] { display: none !important; }
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             background: #f8fafc; 

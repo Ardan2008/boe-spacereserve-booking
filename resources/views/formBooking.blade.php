@@ -1061,7 +1061,7 @@
             {{-- reCAPTCHA --}}
             <div class="mt-6">
                 <div class="g-recaptcha"
-                    data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}"
+                    data-sitekey="{{ config('services.recaptcha.site_key') }}"
                     data-callback="onRecaptchaSuccess"
                     data-expired-callback="onRecaptchaExpired">
                 </div>

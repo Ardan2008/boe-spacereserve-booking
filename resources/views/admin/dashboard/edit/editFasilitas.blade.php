@@ -513,17 +513,23 @@
                                             <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Foto Kamar (3 foto)</label>
                                             <div class="grid grid-cols-3 gap-3">
                                                 <template x-for="fi in [0, 1, 2]" :key="fi">
-                                                    <div class="relative overflow-hidden rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:border-[#1265A8] transition-all duration-300 h-20 flex items-center justify-center group/foto cursor-pointer">
+                                                    <div class="relative overflow-hidden rounded-2xl transition-all duration-500 h-32 flex items-center justify-center group/foto cursor-pointer"
+                                                        :class="rooms[ri].fotoErrors[fi] ? 'border-2 border-red-400 bg-red-50' : 'border-2 border-dashed border-slate-200 bg-slate-50/50 hover:border-[#1265A8]'">
                                                         <img :src="rooms[ri].fotoPreviews[fi]" class="absolute inset-0 w-full h-full object-cover z-10" x-show="rooms[ri].fotoPreviews[fi]">
-                                                        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover/foto:opacity-100 transition-opacity z-20 flex items-center justify-center" x-show="rooms[ri].fotoPreviews[fi]">
-                                                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/foto:opacity-100 transition-opacity duration-300 z-20 flex flex-col items-center justify-center text-white" x-show="rooms[ri].fotoPreviews[fi]">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                                         </div>
-                                                        <div class="relative z-20 flex flex-col items-center" x-show="!rooms[ri].fotoPreviews[fi]">
-                                                            <svg class="w-4 h-4 text-slate-300 group-hover/foto:text-[#1265A8] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                                        <div class="relative z-20 flex flex-col items-center gap-1" x-show="!rooms[ri].fotoPreviews[fi] && !rooms[ri].fotoErrors[fi]">
+                                                            <svg class="w-5 h-5 text-slate-300 group-hover/foto:text-[#1265A8] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                                            <span class="text-[8px] text-slate-300 font-bold uppercase tracking-widest">Max 2MB</span>
+                                                        </div>
+                                                        <div class="relative z-20 flex flex-col items-center gap-1" x-show="rooms[ri].fotoErrors[fi]">
+                                                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                                                            <span class="text-[8px] text-red-400 font-black uppercase tracking-widest" x-text="'Foto ' + (fi+1) + ' >2MB'"></span>
                                                         </div>
                                                         <input type="file" accept="image/*"
                                                             :name="'room_fotos[' + ri + '][' + fi + ']'"
-                                                            class="absolute inset-0 opacity-0 cursor-pointer z-30"
+                                                            class="absolute inset-0 opacity-0 cursor-pointer z-35"
                                                             @change="handleRoomFoto($event, ri, fi)">
                                                     </div>
                                                 </template>
@@ -736,6 +742,7 @@
                     @if(isset($fasilitas->gallery[2])) '/storage/fasilitas/gallery/{{ $fasilitas->gallery[2] }}' @else null @endif
                 ],
                 galleryErrors: [false, false, false],
+                fotoErrors: [],
 
                 init() {
                     // Expose this component to window so roomTypeDropdown instances
@@ -749,16 +756,20 @@
 
                     this.rooms.forEach(r => {
                         // Hydrate fotoPreviews from saved DB foto paths
-                        if (!r.fotoPreviews) {
-                            r.fotoPreviews = [null, null, null];
-                        }
+                        const previews = [null, null, null];
                         if (Array.isArray(r.foto) && r.foto.length > 0) {
                             r.foto.forEach((filename, fi) => {
-                                if (filename && !r.fotoPreviews[fi]) {
-                                    r.fotoPreviews[fi] = '/storage/fasilitas/rooms/' + filename;
+                                if (filename) {
+                                    previews[fi] = '/storage/fasilitas/rooms/' + filename;
                                 }
                             });
+                        } else if (Array.isArray(r.fotoPreviews)) {
+                            r.fotoPreviews.forEach((p, fi) => {
+                                if (p) previews[fi] = p;
+                            });
                         }
+                        r.fotoPreviews = previews;
+                        r.fotoErrors = [false, false, false];
                         if (!r.foto) {
                             r.foto = [];
                         }
@@ -833,6 +844,7 @@
                         max_anak: {{ $fasilitas->max_anak ?? 0 }},
                         foto: [],
                         fotoPreviews: [null, null, null],
+                        fotoErrors: [false, false, false],
                         harga_harian: index === 0 ? '{{ $fasilitas->harga }}' : '',
                         harga_mingguan: '',
                         harga_bulanan: index === 0 ? '{{ $fasilitas->harga_bulanan }}' : '',
@@ -1019,7 +1031,11 @@
                     clearError(document.getElementById('errGallery'));
 
                     const reader = new FileReader();
-                    reader.onload = (e) => { this.galleryPreviews[index] = e.target.result; };
+                    reader.onload = (e) => {
+                        const previews = [...this.galleryPreviews];
+                        previews[index] = e.target.result;
+                        this.galleryPreviews = previews;
+                    };
                     reader.readAsDataURL(file);
                 },
 
@@ -1029,24 +1045,23 @@
 
                     const MAX = 2 * 1024 * 1024;
                     if (file.size > MAX) {
-                        Swal.fire({
-                            title: 'File Terlalu Besar',
-                            text: 'Foto kamar maksimal 2 MB.',
-                            icon: 'warning',
-                            confirmButtonColor: '#1265A8',
-                            confirmButtonText: 'OK',
-                            customClass: { popup: 'rounded-[2.5rem] p-8' }
-                        });
                         event.target.value = '';
+                        this.rooms[roomIndex].fotoPreviews[fotoIndex] = null;
+                        this.rooms[roomIndex].fotoErrors[fotoIndex] = true;
+                        const container = event.target.closest('div[class*="relative overflow-hidden rounded-2xl"]');
+                        if (container) triggerShake(container);
                         return;
                     }
 
+                    this.rooms[roomIndex].fotoErrors[fotoIndex] = false;
+
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        if (!this.rooms[roomIndex].fotoPreviews) {
-                            this.rooms[roomIndex].fotoPreviews = [null, null, null];
-                        }
-                        this.rooms[roomIndex].fotoPreviews[fotoIndex] = e.target.result;
+                        const previews = this.rooms[roomIndex].fotoPreviews
+                            ? [...this.rooms[roomIndex].fotoPreviews]
+                            : [null, null, null];
+                        previews[fotoIndex] = e.target.result;
+                        this.rooms[roomIndex].fotoPreviews = previews;
                     };
                     reader.readAsDataURL(file);
                 },

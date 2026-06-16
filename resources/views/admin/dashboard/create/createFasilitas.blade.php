@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -434,23 +434,6 @@
             font-weight: 800;
         }
 
-        /* Room foto grid */
-        .room-foto-slot {
-            position: relative;
-            overflow: hidden;
-            border-radius: 1rem;
-            border: 2px dashed #e2e8f0;
-            background: #fafafa;
-            height: 8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: border-color .3s;
-        }
-        .room-foto-slot:hover {
-            border-color: #1d6fa5;
-        }
     </style>
 </head>
 <body class="bg-[#F8FAFC] font-sans antialiased text-slate-800">
@@ -589,16 +572,7 @@
                                 <input :id="'galleryInput' + i" :name="'gallery[' + i + ']'"
                                     type="file" accept="image/*"
                                     class="absolute inset-0 opacity-0 cursor-pointer z-30"
-                                    @change="
-                                        if (window.validateGalleryFile($event.target, i)) {
-                                            const file = $event.target.files[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = (e) => galleryPreviews[i] = e.target.result;
-                                                reader.readAsDataURL(file);
-                                            }
-                                        }
-                                    ">
+                                    @change="handleGalleryChange($event, i)">
                             </div>
                         </template>
                     </div>
@@ -665,14 +639,41 @@
                             x-text="'Total ' + jumlahKamar + ' kamar'"></span>
                     </div>
 
-                    {{-- Single room — no slider --}}
-                    <div x-show="jumlahKamar === 1">
+                    {{-- Slider Navigation — hanya tampil jika lebih dari 1 kamar --}}
+                    <div class="room-slider-nav" x-show="jumlahKamar > 1" x-cloak>
+                        <button type="button" @click="prevRoom()" :disabled="currentRoomIndex === 0" class="room-nav-btn">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            Previous
+                        </button>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-black text-slate-500 whitespace-nowrap" x-text="'Kamar ' + (currentRoomIndex + 1) + ' / ' + rooms.length"></span>
+                            <div class="room-dots">
+                                <template x-for="(_, dIdx) in rooms" :key="dIdx">
+                                    <button type="button"
+                                        @click="currentRoomIndex = dIdx; showTypeDropdown = false"
+                                        :class="dIdx === currentRoomIndex ? 'active' : ''"
+                                        class="room-dot"></button>
+                                </template>
+                            </div>
+                        </div>
+                        <button type="button" @click="nextRoom()" :disabled="currentRoomIndex === rooms.length - 1" class="room-nav-btn">
+                            Next
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    {{-- SATU template untuk semua kamar (fix duplikasi input file) --}}
+                    <div x-show="jumlahKamar === 1 || true">
                         <template x-for="(room, rIdx) in rooms" :key="rIdx">
-                            <div class="room-card space-y-5">
+                            <div class="room-card space-y-5" x-show="jumlahKamar === 1 || currentRoomIndex === rIdx">
                                 {{-- Room header --}}
                                 <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
                                     <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Kamar</span>
-                                    <span class="text-xs font-black text-[#1d6fa5]">1</span>
+                                    <span class="text-xs font-black text-[#1d6fa5]" x-text="rIdx + 1"></span>
                                 </div>
 
                                 {{-- Tipe Kamar — global dropdown --}}
@@ -783,23 +784,23 @@
                                 {{-- Foto Kamar (maks 3) --}}
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Foto Kamar (maks 3)</label>
-                                    <div class="grid grid-cols-3 gap-2">
+                                    <div class="grid grid-cols-3 gap-3">
                                         <template x-for="fIdx in [0, 1, 2]" :key="fIdx">
-                                            <div class="room-foto-slot">
-                                                <img :src="room.fotoPreviews[fIdx]" class="absolute inset-0 w-full h-full object-cover z-10 rounded-[inherit]" x-show="room.fotoPreviews[fIdx]" alt="">
-                                                <div class="relative z-20 flex flex-col items-center" x-show="!room.fotoPreviews[fIdx]">
-                                                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div class="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:border-[#1d6fa5] transition-all duration-500 h-32 flex items-center justify-center group/gal cursor-pointer">
+                                                <img :src="rooms[rIdx].fotoPreviews[fIdx]" class="absolute inset-0 w-full h-full object-cover z-10" x-show="rooms[rIdx].fotoPreviews[fIdx]" alt="">
+                                                <div class="relative z-20 flex flex-col items-center" x-show="!rooms[rIdx].fotoPreviews[fIdx]">
+                                                    <svg class="w-5 h-5 text-slate-300 group-hover/gal:text-[#1d6fa5] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                                                     </svg>
                                                 </div>
-                                                        <input type="file" accept="image/*"
-                                                            :name="'room_fotos[' + rIdx + '][' + fIdx + ']'"
-                                                            class="room-foto-input absolute inset-0 opacity-0 cursor-pointer z-30"
-                                                            @change="handleRoomFoto($event, rIdx, fIdx)">
-                                                    </div>
-                                                </template>
+                                                <input type="file" accept="image/*"
+                                                    :name="'room_fotos[' + rIdx + '][' + fIdx + ']'"
+                                                    class="absolute inset-0 opacity-0 cursor-pointer z-30"
+                                                    @change="handleRoomFoto($event, rIdx, fIdx)">
                                             </div>
-                                        </div>
+                                        </template>
+                                    </div>
+                                </div>
 
                                         {{-- Fasilitas Kamar — 10 icon cards with micro-inputs --}}
                                         <div>
@@ -965,331 +966,7 @@
                         </template>
                     </div>
 
-                    {{-- Slider — multiple rooms --}}
-                    <div x-show="jumlahKamar > 1">
-                        {{-- Slider Navigation --}}
-                        <div class="room-slider-nav">
-                            <button type="button" @click="prevRoom()" :disabled="currentRoomIndex === 0" class="room-nav-btn">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
-                                </svg>
-                                Previous
-                            </button>
 
-                            <div class="flex items-center gap-3">
-                                <span class="text-xs font-black text-slate-500 whitespace-nowrap" x-text="'Kamar ' + (currentRoomIndex + 1) + ' / ' + rooms.length"></span>
-                                <div class="room-dots">
-                                    <template x-for="(_, dIdx) in rooms" :key="dIdx">
-                                        <button type="button"
-                                            @click="currentRoomIndex = dIdx; showTypeDropdown = false"
-                                            :class="dIdx === currentRoomIndex ? 'active' : ''"
-                                            class="room-dot"></button>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <button type="button" @click="nextRoom()" :disabled="currentRoomIndex === rooms.length - 1" class="room-nav-btn">
-                                Next
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </button>
-                        </div>
-
-                        {{-- Room cards --}}
-                        <template x-for="(room, rIdx) in rooms" :key="rIdx">
-                            <div x-show="currentRoomIndex === rIdx" class="room-card space-y-5">
-                                {{-- Room header --}}
-                                <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
-                                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Kamar</span>
-                                    <span class="text-xs font-black text-[#1d6fa5]" x-text="rIdx + 1"></span>
-                                </div>
-
-                                {{-- Tipe Kamar --}}
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipe Kamar</label>
-                                    @include('admin.dashboard.partials._room_type_dropdown', ['roomIndex' => 'rIdx', 'roomsVar' => 'rooms'])
-                                </div>
-
-                                {{-- Keunggulan Tipe Kamar --}}
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Keunggulan Tipe Kamar</label>
-                                    <textarea x-model="room.keunggulan" rows="2"
-                                        placeholder="Deskripsi singkat keunggulan tipe kamar ini..."
-                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-medium text-sm resize-none"></textarea>
-                                </div>
-
-                                {{-- Ukuran (Panjang × Lebar) & Konfigurasi Ranjang --}}
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Ukuran Kamar</label>
-                                        <div class="flex items-center gap-2">
-                                            <div class="relative flex-1">
-                                                <input type="number" x-model="room.panjang" min="0" step="0.1"
-                                                    placeholder="0"
-                                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm text-center">
-                                            </div>
-                                            <span class="text-lg font-black text-slate-400 flex-shrink-0">×</span>
-                                            <div class="relative flex-1">
-                                                <input type="number" x-model="room.lebar" min="0" step="0.1"
-                                                    placeholder="0"
-                                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm text-center">
-                                            </div>
-                                            <span class="text-xs font-black text-slate-400 flex-shrink-0 whitespace-nowrap">m²</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Konfigurasi Ranjang</label>
-                                        <input type="text" x-model="room.ranjang"
-                                            placeholder="Contoh: 1 King Bed"
-                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm">
-                                    </div>
-                                </div>
-
-                                {{-- Jumlah --}}
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Jumlah Kamar</label>
-                                    <input type="number" x-model.number="room.jumlah" min="1"
-                                        :name="'rooms[' + rIdx + '][jumlah]'"
-                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm">
-                                </div>
-
-                                {{-- Nomor Kamar Tagging --}}
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nomor Kamar</label>
-                                    <div class="flex gap-2">
-                                        <input type="text"
-                                            x-model="rooms[rIdx].temp_input"
-                                            @keydown.enter.prevent="addNomorKamar(rIdx)"
-                                            :disabled="rooms[rIdx].nomor_kamar.length >= rooms[rIdx].jumlah"
-                                            :class="rooms[rIdx].nomor_kamar.length >= rooms[rIdx].jumlah ? 'bg-gray-100 cursor-not-allowed text-gray-400' : 'bg-white'"
-                                            placeholder="Ketik nomor lalu Enter..."
-                                            class="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm transition-all">
-                                        <button type="button"
-                                            @click="addNomorKamar(rIdx)"
-                                            :disabled="rooms[rIdx].nomor_kamar.length >= rooms[rIdx].jumlah"
-                                            :class="rooms[rIdx].nomor_kamar.length >= rooms[rIdx].jumlah ? 'bg-gray-100 cursor-not-allowed text-gray-400' : 'bg-[#1d6fa5] text-white hover:bg-slate-800'"
-                                            class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all font-black text-lg">
-                                            +
-                                        </button>
-                                    </div>
-                                    <div class="mt-1.5 text-[10px] font-bold">
-                                        <span x-show="rooms[rIdx].nomor_kamar.length < rooms[rIdx].jumlah" class="text-red-500">
-                                            🔴 Input Belum Selesai (<span x-text="rooms[rIdx].nomor_kamar.length"></span> dari <span x-text="rooms[rIdx].jumlah"></span>)
-                                        </span>
-                                        <span x-show="rooms[rIdx].nomor_kamar.length >= rooms[rIdx].jumlah && rooms[rIdx].jumlah > 0" class="text-green-600">
-                                            🟢 Semua Nomor Kamar Telah Di-input (<span x-text="rooms[rIdx].jumlah"></span> dari <span x-text="rooms[rIdx].jumlah"></span>)
-                                        </span>
-                                    </div>
-                                    <div class="flex flex-wrap gap-1.5 mt-2">
-                                        <template x-for="(tag, tagIdx) in rooms[rIdx].nomor_kamar" :key="tagIdx">
-                                            <span @click="removeNomorKamar(rIdx, tagIdx)"
-                                                class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#1d6fa5] text-[10px] font-black cursor-pointer hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all select-none">
-                                                <span x-text="tag"></span>
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            </span>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                {{-- Cap. Dewasa + Anak --}}
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cap. Dewasa (Kamar)</label>
-                                        <input type="number" x-model.number="room.max_dewasa" min="1"
-                                            :name="'rooms[' + rIdx + '][max_dewasa]'"
-                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cap. Anak (Kamar)</label>
-                                        <input type="number" x-model.number="room.max_anak" min="0"
-                                            :name="'rooms[' + rIdx + '][max_anak]'"
-                                            class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm">
-                                    </div>
-                                </div>
-
-                                {{-- Foto Kamar --}}
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Foto Kamar (maks 3)</label>
-                                    <div class="grid grid-cols-3 gap-2">
-                                        <template x-for="fIdx in [0, 1, 2]" :key="fIdx">
-                                            <div class="room-foto-slot">
-                                                <img :src="room.fotoPreviews[fIdx]" class="absolute inset-0 w-full h-full object-cover z-10 rounded-[inherit]" x-show="room.fotoPreviews[fIdx]" alt="">
-                                                <div class="relative z-20 flex flex-col items-center" x-show="!room.fotoPreviews[fIdx]">
-                                                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                                                    </svg>
-                                                </div>
-                                                <input type="file" accept="image/*"
-                                                    :name="'room_fotos[' + rIdx + '][' + fIdx + ']'"
-                                                    class="room-foto-input absolute inset-0 opacity-0 cursor-pointer z-30"
-                                                    @change="handleRoomFoto($event, rIdx, fIdx)">
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                {{-- Fasilitas Kamar — 10 icon cards with micro-inputs --}}
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Fasilitas Kamar</label>
-                                    <div class="grid grid-cols-5 sm:grid-cols-5 gap-2">
-                                        <template x-if="room.fasShow.ac"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">AC</span>
-                                            <input type="number" x-model.number="room.fasilitas.ac" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.ac = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.kipas_angin"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Kipas Angin</span>
-                                            <input type="number" x-model.number="room.fasilitas.kipas_angin" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.kipas_angin = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.meja_kursi"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Meja & Kursi</span>
-                                            <input type="number" x-model.number="room.fasilitas.meja_kursi" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.meja_kursi = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.lemari_locker"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Lemari / Locker</span>
-                                            <input type="number" x-model.number="room.fasilitas.lemari_locker" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.lemari_locker = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.stopkontak"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Stopkontak</span>
-                                            <input type="number" x-model.number="room.fasilitas.stopkontak" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.stopkontak = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.kamar_mandi_dalam"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">K. Mandi Dalam</span>
-                                            <input type="number" x-model.number="room.fasilitas.kamar_mandi_dalam" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.kamar_mandi_dalam = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.water_heater"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Water Heater</span>
-                                            <input type="number" x-model.number="room.fasilitas.water_heater" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.water_heater = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.bantal_set_sprei"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Bantal & Sprei</span>
-                                            <input type="number" x-model.number="room.fasilitas.bantal_set_sprei" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.bantal_set_sprei = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.gantungan_baju"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Gantungan Baju</span>
-                                            <input type="number" x-model.number="room.fasilitas.gantungan_baju" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.gantungan_baju = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        <template x-if="room.fasShow.kaca_rias"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                            <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center">Kaca Rias</span>
-                                            <input type="number" x-model.number="room.fasilitas.kaca_rias" min="0" placeholder="0"
-                                                class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outset-none font-bold text-xs">
-                                            <button type="button" @click="room.fasShow.kaca_rias = false"
-                                                class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                        </div></template>
-                                        {{-- Custom Fasilitas --}}
-                                        <template x-for="(cf, cfIdx) in room.customFasilitas" :key="cfIdx">
-                                            <div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-2 py-3 transition-all duration-200 hover:border-[#1d6fa5] hover:shadow-sm">
-                                                <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider mb-1 leading-tight text-center" x-text="cf.nama"></span>
-                                                <input type="number" x-model.number="cf.jumlah" min="0" placeholder="0"
-                                                    class="w-12 h-7 text-center bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-xs">
-                                                <button type="button" @click="removeCustomFasilitas(rIdx, cfIdx)"
-                                                    class="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-sm font-bold opacity-0 group-hover/label:opacity-100 pointer-events-none group-hover/label:pointer-events-auto transition-opacity duration-200">&times;</button>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <div class="flex gap-2 mt-3">
-                                        <input type="text" x-model="room.customFasNama" @keydown.enter.prevent="addCustomFasilitas(rIdx)"
-                                            placeholder="Tambah fasilitas (contoh: Lampu)..."
-                                            class="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold outline-none focus:border-[#1d6fa5] transition-all">
-                                        <button type="button" @click="addCustomFasilitas(rIdx)"
-                                            class="px-4 py-2 bg-[#1d6fa5] text-white rounded-xl hover:bg-slate-800 transition-all font-black text-sm">+</button>
-                                    </div>
-                                </div>
-
-                                {{-- Harga 2x2 --}}
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Harga</label>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        {{-- Harian --}}
-                                        <div>
-                                            <span class="block text-[9px] font-bold text-slate-500 mb-1 ml-1 uppercase tracking-wider">Harian</span>
-                                            <div class="relative">
-                                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-[#1d6fa5] text-xs pointer-events-none">Rp</span>
-                                                <input type="text"
-                                                    @input="
-                                                        const raw = $event.target.value.replace(/\D/g, '');
-                                                        room.harga_harian = raw;
-                                                        $event.target.value = raw ? new Intl.NumberFormat('id-ID').format(raw) : '';
-                                                    "
-                                                    class="w-full pl-9 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm">
-                                                <input type="hidden" :name="'rooms[' + rIdx + '][harga_harian]'" :value="room.harga_harian">
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[9px] font-bold text-slate-500 mb-1 ml-1 uppercase tracking-wider">Mingguan</span>
-                                            <div class="relative">
-                                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-[#1d6fa5] text-xs pointer-events-none">Rp</span>
-                                                <input type="text"
-                                                    @input="
-                                                        const raw = $event.target.value.replace(/\D/g, '');
-                                                        room.harga_mingguan = raw;
-                                                        $event.target.value = raw ? new Intl.NumberFormat('id-ID').format(raw) : '';
-                                                    "
-                                                    class="w-full pl-9 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm">
-                                                <input type="hidden" :name="'rooms[' + rIdx + '][harga_mingguan]'" :value="room.harga_mingguan">
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[9px] font-bold text-slate-500 mb-1 ml-1 uppercase tracking-wider">Bulanan</span>
-                                            <div class="relative">
-                                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-[#1d6fa5] text-xs pointer-events-none">Rp</span>
-                                                <input type="text"
-                                                    @input="
-                                                        const raw = $event.target.value.replace(/\D/g, '');
-                                                        room.harga_bulanan = raw;
-                                                        $event.target.value = raw ? new Intl.NumberFormat('id-ID').format(raw) : '';
-                                                    "
-                                                    class="w-full pl-9 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm">
-                                                <input type="hidden" :name="'rooms[' + rIdx + '][harga_bulanan]'" :value="room.harga_bulanan">
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[9px] font-bold text-slate-500 mb-1 ml-1 uppercase tracking-wider">Tahunan</span>
-                                            <div class="relative">
-                                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-[#1d6fa5] text-xs pointer-events-none">Rp</span>
-                                                <input type="text"
-                                                    @input="
-                                                        const raw = $event.target.value.replace(/\D/g, '');
-                                                        room.harga_tahunan = raw;
-                                                        $event.target.value = raw ? new Intl.NumberFormat('id-ID').format(raw) : '';
-                                                    "
-                                                    class="w-full pl-9 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none font-bold text-sm">
-                                                <input type="hidden" :name="'rooms[' + rIdx + '][harga_tahunan]'" :value="room.harga_tahunan">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
 
                 {{-- ═══════════════════════════════════════════════════════════════
                      ADDITIONAL FIELDS
@@ -1498,7 +1175,7 @@
                 const g = $('galleryInput' + i);
                 if (g && g.files[0]) total += g.files[0].size;
             }
-            document.querySelectorAll('.room-foto-input').forEach(el => {
+            document.querySelectorAll('input[name^="room_fotos"]').forEach(el => {
                 if (el.files[0]) total += el.files[0].size;
             });
             return total;
@@ -1694,6 +1371,17 @@
             const file = input.files[0];
             if (file && file.size > MAX_FILE_SIZE) {
                 showToast('warning', `Foto galeri ${index + 1} terlalu besar`,
+                    `Ukuran (${formatBytes(file.size)}) melebihi batas 2MB.`);
+                input.value = '';
+                return false;
+            }
+            return true;
+        };
+
+        window.validateRoomFoto = function (input, roomIndex, fotoIndex) {
+            const file = input.files[0];
+            if (file && file.size > MAX_FILE_SIZE) {
+                showToast('warning', `Foto kamar ${fotoIndex + 1} terlalu besar`,
                     `Ukuran (${formatBytes(file.size)}) melebihi batas 2MB.`);
                 input.value = '';
                 return false;
@@ -1980,12 +1668,10 @@
                 if (el) el.value = JSON.stringify(payload);
                 const rd = document.getElementById('roomsDataInput');
                 if (rd) rd.value = JSON.stringify(payload);
-                // Update submit guard
+                // Update submit guard — show warning only, never disable button
                 const btnSimpan = document.getElementById('btnSimpan');
-                if (btnSimpan && this.tipe === 'asrama') {
-                    const hasMismatch = this.rooms.some(r => r.nomor_kamar.length < r.jumlah);
-                    btnSimpan.disabled = hasMismatch;
-                    btnSimpan.title = hasMismatch ? 'Lengkapi semua nomor kamar terlebih dahulu.' : '';
+                if (btnSimpan) {
+                    btnSimpan.disabled = false;
                 }
             },
 
@@ -2050,40 +1736,30 @@
                 this.syncPaketHarian();
             },
 
-            handleRoomFoto(event, roomIndex, fotoIndex) {
+            handleGalleryChange(event, index) {
+                if (!window.validateGalleryFile(event.target, index)) return;
                 const file = event.target.files[0];
                 if (!file) return;
-
-                const MAX = 2 * 1024 * 1024;
-                if (file.size > MAX) {
-                    const formatBytes = (bytes) => {
-                        const k = 1024, s = ['Bytes','KB','MB'];
-                        const i = Math.floor(Math.log(bytes) / Math.log(k));
-                        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${s[i]}`;
-                    };
-                    const showToast = (type, title, msg) => {
-                        const stack = document.getElementById('v-toast-stack');
-                        if (!stack) return;
-                        const icons = {
-                            warning: `<svg class="v-toast-icon" style="color:#BA7517" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`,
-                        };
-                        const t = document.createElement('div');
-                        t.className = `v-toast toast-${type}`;
-                        t.innerHTML = `${icons[type]}<div class="v-toast-body"><div class="v-toast-title">${title}</div><div class="v-toast-msg">${msg}</div></div><button class="v-toast-close" aria-label="Tutup"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg></button><div class="v-toast-progress" style="animation-duration:4500ms"></div>`;
-                        stack.appendChild(t);
-                        setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 280); }, 4500);
-                    };
-                    showToast('warning', `Foto kamar ${fotoIndex + 1} terlalu besar`, `Ukuran (${formatBytes(file.size)}) melebihi batas 2MB.`);
-                    event.target.value = '';
-                    return;
-                }
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    if (!this.rooms[roomIndex].fotoPreviews) {
-                        this.rooms[roomIndex].fotoPreviews = [null, null, null];
-                    }
-                    this.rooms[roomIndex].fotoPreviews[fotoIndex] = e.target.result;
+                    const p = [...this.galleryPreviews];
+                    p[index] = e.target.result;
+                    this.galleryPreviews = p;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            handleRoomFoto(event, roomIndex, fotoIndex) {
+                if (!window.validateRoomFoto(event.target, roomIndex, fotoIndex)) return;
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const previews = this.rooms[roomIndex].fotoPreviews
+                        ? [...this.rooms[roomIndex].fotoPreviews]
+                        : [null, null, null];
+                    previews[fotoIndex] = e.target.result;
+                    this.rooms[roomIndex].fotoPreviews = previews;
                 };
                 reader.readAsDataURL(file);
             },

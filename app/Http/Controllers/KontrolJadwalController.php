@@ -327,15 +327,17 @@ class KontrolJadwalController extends Controller
     public function downloadReceipt($id)
     {
         $booking = Booking::with(['penyewa', 'fasilitas'])->findOrFail($id);
+        $penyewaNama = $booking->penyewa->nama ?? 'Unknown';
+        $fasilitasNama = $booking->fasilitas->nama ?? '-';
         $pdf = Pdf::loadView('pdf.receipt', compact('booking'));
 
         AuditLog::catat(
             'Download Kuitansi',
-            "Kuitansi Booking #{$id} ({$booking->penyewa->nama}) diunduh.",
+            "Kuitansi Booking #{$id} ({$penyewaNama}) diunduh.",
             [
                 'target_tipe'    => 'booking',
                 'target_id'      => $id,
-                'fasilitas_nama' => $booking->fasilitas->nama ?? '-',
+                'fasilitas_nama' => $fasilitasNama,
             ]
         );
 
