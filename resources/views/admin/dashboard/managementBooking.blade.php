@@ -291,7 +291,7 @@
                                     @click="showPreviewModal = true;
                                             previewType = 'KTP';
                                             currentBooking = {{ $booking->id }};
-                                            previewUrl = @json($booking->penyewa?->foto_identitas ? Storage::url($booking->penyewa->foto_identitas) : '')"
+                                            previewUrl = '{{ $booking->penyewa?->foto_identitas ? Storage::url($booking->penyewa->foto_identitas) : '' }}'"
                                     class="mx-auto flex flex-col items-center justify-center w-14 h-14 bg-slate-50 border border-dashed border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 transition-all text-slate-400 group">
                                     <svg class="w-5 h-5 mb-1 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

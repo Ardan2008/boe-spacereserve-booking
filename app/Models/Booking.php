@@ -27,7 +27,7 @@ class Booking extends Model
         'expired_at'        => 'datetime',
         'checkin_at'        => 'datetime',
         'allocated_rooms'   => 'array',
-        'nomor_kamar'       => 'string',
+        'nomor_kamar'       => 'array',
         'selected_packages' => 'array',
         'tgl_mulai'         => 'date',
         'tgl_selesai'       => 'date',
