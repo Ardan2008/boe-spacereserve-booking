@@ -643,6 +643,11 @@
                             };
                             $tipe = $booking->fasilitas?->tipe ?? 'aula';
                             $end  = \Carbon\Carbon::parse($booking->tgl_selesai)->endOfDay();
+                            $start = $booking->checkin_at
+                                ? \Carbon\Carbon::parse($booking->checkin_at)
+                                : \Carbon\Carbon::parse($booking->tgl_mulai)->startOfDay();
+                            $totalMs = $start->diffInMilliseconds($end, false);
+                            if ($totalMs <= 0) $totalMs = 86400000;
                         @endphp
                         <tr class="hover:bg-slate-50/80 transition-all duration-200">
 
@@ -742,7 +747,7 @@
                             </td>
 
                             {{-- DURASI TERSISA --}}
-                            <td class="p-5" x-data="countdown('{{ $end->toIso8601String() }}', 0)">
+                            <td class="p-5" x-data="countdown('{{ $end->toIso8601String() }}', {{ $totalMs }})">
                                 <div class="flex flex-col gap-1.5">
                                     <div class="flex items-center justify-between gap-2">
                                         <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tersisa</span>
