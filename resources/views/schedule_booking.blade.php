@@ -78,10 +78,10 @@
 <body class="min-h-screen">
     
     <main class="max-w-6xl mx-auto px-4 pt-12 pb-12" 
-        x-data="scheduleManager({
+        x-data='scheduleManager({
             facilities: @json($facilities ?? []),
             initialFasilitasId: {{ $selectedFasilitasId ?? 'null' }}
-        })"
+        })'
         x-cloak>
         
         {{-- ═══ HEADER ═══ --}}
@@ -419,6 +419,12 @@
                             }
                             if (ev.color === 'blue') {
                                 return { statusClass: 'status-booked', tooltip: 'Sudah Terbooking' };
+                            }
+                            if (ev.color === 'purple') {
+                                return { statusClass: 'status-booked', tooltip: 'Semua Kamar Terbooking' };
+                            }
+                            if (ev.color === 'orange') {
+                                return { statusClass: 'status-pending', tooltip: 'Semua Kamar Sedang Dipesan' };
                             }
                             if (ev.color === 'black') {
                                 return { statusClass: 'status-blocked', tooltip: 'Diblokir / Locked' };

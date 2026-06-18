@@ -265,9 +265,10 @@
                             @if(!empty($rt['kode_blok']))
                             <span class="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-0.5 rounded-full">Blok {{ $rt['kode_blok'] }}</span>
                             @endif
-                            <span id="avail-badge-{{ $rtIdx }}" class="text-[9px] font-bold {{ ($rt['jumlah'] ?? 0) > 0 ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-red-700 bg-red-50 border border-red-200' }} px-2 py-0.5 rounded-full ml-auto"
-                                  data-init-text="{{ ($rt['jumlah'] ?? 0) > 0 ? 'Tersedia ' . $rt['jumlah'] . ' Kamar' : 'Kamar Penuh' }}">
-                                {{ ($rt['jumlah'] ?? 0) > 0 ? 'Tersedia ' . $rt['jumlah'] . ' Kamar' : 'Kamar Penuh' }}
+                            @php $totalRooms = count($rt['nomor_kamar'] ?? []) ?: ($rt['jumlah'] ?? 0); @endphp
+                            <span id="avail-badge-{{ $rtIdx }}" class="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full ml-auto"
+                                  data-init-text="Tersedia {{ $totalRooms }} Kamar">
+                                Tersedia {{ $totalRooms }} Kamar
                             </span>
                         </div>
                         {{-- Keunggulan --}}
@@ -337,7 +338,6 @@
                         </div>
                         {{-- Booking CTA --}}
                         <div class="mt-auto pt-3 border-t border-slate-100">
-                            @if(($rt['jumlah'] ?? 0) > 0)
                             <a href="{{ $bookUrl }}"
                                class="inline-flex items-center gap-2 bg-[#1d6fa5] hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-xl transition-all shadow-sm hover:shadow-md">
                                 Booking Kamar Ini
@@ -345,16 +345,6 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                                 </svg>
                             </a>
-                            @else
-                            <button disabled
-                               onclick="alert('Maaf, semua kamar pada tipe ini sudah penuh untuk tanggal yang Anda pilih.')"
-                               class="inline-flex items-center gap-2 bg-gray-400 text-white text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-xl cursor-not-allowed opacity-70 pointer-events-none">
-                                Kamar Penuh
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                                </svg>
-                            </button>
-                            @endif
                         </div>
                     </div>{{-- /info panel --}}
                 </div>
@@ -454,10 +444,9 @@
                 if (!data.stock) return;
                 data.stock.forEach(function(item, idx) {
                     var el = document.getElementById('avail-badge-' + idx);
-                    if (el) {
-                        var txt = item.jumlah > 0 ? 'Tersedia ' + item.jumlah + ' Kamar' : 'Kamar Penuh';
-                        if (el.textContent !== txt) {
-                            el.textContent = txt;
+                    if (el && el.dataset.initText) {
+                        if (el.textContent !== el.dataset.initText) {
+                            el.textContent = el.dataset.initText;
                         }
                     }
                 });

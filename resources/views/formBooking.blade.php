@@ -209,11 +209,8 @@
                 {{-- ── PILIH TIPE KAMAR — Premium Horizontal Cards (asrama only) ── --}}
                 <div x-show="currentFacility?.tipe === 'asrama' && roomTypes.length > 0"
                      class="space-y-4">
-                    <div class="flex items-center justify-between mb-1">
+                    <div class="mb-1">
                         <h4 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Pilih Tipe Kamar</h4>
-                        <span x-show="selected_tipe_id !== null" x-transition
-                            class="text-[9px] text-blue-600 font-black bg-blue-50 px-2 py-1 rounded-full border border-blue-100 cursor-pointer hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"
-                            @click="resetRoomType()">× Reset</span>
                     </div>
 
                     {{-- ── Premium Horizontal Room Card Loop ── --}}
@@ -294,8 +291,8 @@
                                         <p class="font-black text-gray-900 text-sm" x-text="rt.tipe || ('Tipe ' + (idx + 1))"></p>
                                         <span x-show="rt.kode_blok" class="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-0.5 rounded-full" x-text="'Blok ' + rt.kode_blok"></span>
                                         <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ml-auto"
-                                              :class="selected_tipe_id === idx ? (availabilityFetched ? (maxStock > 0 ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-red-700 bg-red-50 border border-red-200') : 'text-emerald-700 bg-emerald-50 border border-emerald-200') : 'text-emerald-700 bg-emerald-50 border border-emerald-200'"
-                                              x-text="selected_tipe_id === idx ? (availabilityFetched ? (maxStock > 0 ? 'Tersedia ' + maxStock + ' Kamar' : 'Kamar Penuh') : 'Tersedia ' + (rt.jumlah || 0) + ' Kamar') : 'Tersedia ' + (rt.jumlah || 0) + ' Kamar'"></span>
+                                              class="text-emerald-700 bg-emerald-50 border border-emerald-200"
+                                              x-text="'Tersedia ' + ((rt.nomor_kamar && rt.nomor_kamar.length) ? rt.nomor_kamar.length : (rt.jumlah || 0)) + ' Kamar'"></span>
                                     </div>
                                     {{-- Keunggulan --}}
                                     <p x-show="rt.keunggulan" class="text-[11px] text-slate-500 font-medium leading-snug line-clamp-2" x-text="rt.keunggulan"></p>
@@ -722,13 +719,8 @@
 
             <div class="mt-8 flex justify-between gap-4">
                 <button @click="prevStep()" class="flex-1 py-4 px-6 bg-slate-100 text-slate-400 font-bold rounded-2xl uppercase tracking-widest text-xs">Kembali</button>
-                <button @click="availabilityFetched && maxStock === 0 && selected_tipe_id !== null
-                        ? alert('Maaf, semua kamar pada tipe ini sudah penuh untuk tanggal yang Anda pilih.')
-                        : submitStep2()"
-                    class="flex-[2] py-4 px-6 font-black rounded-2xl uppercase tracking-widest text-xs shadow-lg transition-all"
-                    :class="availabilityFetched && maxStock === 0 && selected_tipe_id !== null
-                        ? 'bg-gray-400 text-white cursor-not-allowed opacity-80'
-                        : 'bg-blue-600 text-white shadow-blue-200 hover:bg-blue-700'">
+                <button @click="submitStep2()"
+                    class="flex-[2] py-4 px-6 font-black rounded-2xl uppercase tracking-widest text-xs shadow-lg transition-all bg-blue-600 text-white shadow-blue-200 hover:bg-blue-700">
                     Konfirmasi Data Diri →
                 </button>
             </div>
@@ -1773,7 +1765,17 @@ document.addEventListener('alpine:init', () => {
         selectDate(date) {
             if (!date) return;
             const status = this.getDateStatus(date);
-            if (status !== 'ready') return;
+            if (status !== 'ready') {
+                let title = '', text = '', icon = 'info';
+                if (status === 'booked') { title = 'Kamar Penuh'; text = 'Semua kamar sudah terbooking untuk tanggal ini. Silakan pilih tanggal lain.'; icon='error'; }
+                else if (status === 'pending') { title = 'Sedang Dipesan'; text = 'Tanggal ini sedang dalam proses pemesanan oleh pengguna lain. Coba pilih tanggal lain.'; }
+                else if (status === 'blocked') { title = 'Diblokir'; text = 'Tanggal ini diblokir oleh pengelola.'; icon='warning'; }
+                else if (status === 'maintenance') { title = 'Maintenance'; text = 'Fasilitas sedang dalam perbaikan pada tanggal ini.'; icon='warning'; }
+                else if (status === 'past') { title = 'Tanggal Lewat'; text = 'Tanggal sudah lewat, silakan pilih tanggal hari ini atau setelahnya.'; icon='warning'; }
+                else if (status === 'closed') { title = 'Tutup'; text = 'Fasilitas tutup pada tanggal ini.'; icon='warning'; }
+                if (title) Swal.fire({ title, text, icon, confirmButtonColor: '#1265A8', confirmButtonText: 'OK', customClass: { popup: 'rounded-[1.5rem]' } });
+                return;
+            }
             if (this.selectedDate && date.getTime() === this.selectedDate.getTime()) {
                 this.selectedDate = null; return;
             }

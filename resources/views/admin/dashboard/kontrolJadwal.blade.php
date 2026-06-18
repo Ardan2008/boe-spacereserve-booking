@@ -305,9 +305,14 @@
                     <h3 class="text-lg font-black text-slate-800">Detail Penyewa</h3>
                     <p id="detailDateLabel" class="text-xs text-slate-400 font-medium mt-0.5"></p>
                 </div>
-                <button onclick="closeModal('modalDetail')" class="w-9 h-9 flex items-center justify-center bg-slate-100 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <div class="flex items-center gap-2">
+                    <div id="detailRoomDropdownRow" class="hidden">
+                        <select id="detailRoomDropdown" class="font-bold text-slate-700 border border-slate-200 rounded-lg px-2 py-1 text-sm bg-white"></select>
+                    </div>
+                    <button onclick="closeModal('modalDetail')" class="w-9 h-9 flex items-center justify-center bg-slate-100 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
             </div>
 
             {{-- Status badge --}}
@@ -531,14 +536,16 @@
             const start = new Date(ev.tgl_mulai); start.setHours(0,0,0,0);
             const end   = new Date(ev.tgl_selesai); end.setHours(23,59,59,999);
             if (date >= start && date <= end) {
-                let suffix = '';
-                if (ev.nomor_kamar && ev.nomor_kamar !== '-') {
-                    suffix = ' — Kamar: ' + ev.nomor_kamar;
-                    if (ev.aggregate) suffix += ' (' + ev.aggregate + ')';
+                let aggSuffix = ev.aggregate ? ' — ' + ev.aggregate : '';
+                if (ev.color === 'yellow') {
+                    let suffix = '';
+                    if (ev.nomor_kamar && ev.nomor_kamar !== '-') {
+                        suffix = ' — Kamar: ' + ev.nomor_kamar;
+                    }
+                    return { statusClass: 'status-pending', tooltipText: '🕐 Pending — ' + ev.nama + suffix, eventData: ev };
                 }
-                if (ev.color === 'yellow')   return { statusClass: 'status-pending',     tooltipText: '🕐 Pending — ' + ev.nama + suffix,   eventData: ev };
-                if (ev.color === 'blue')     return { statusClass: 'status-booked',      tooltipText: '✅ Booked — ' + ev.nama + suffix,    eventData: ev };
-                if (ev.color === 'purple')   return { statusClass: 'status-booked',      tooltipText: '🏠 Booked — ' + ev.nama + suffix,    eventData: ev };
+                if (ev.color === 'blue')     return { statusClass: 'status-booked',      tooltipText: '✅ Booked' + aggSuffix,    eventData: ev };
+                if (ev.color === 'purple')   return { statusClass: 'status-booked',      tooltipText: '🏠 Booked' + aggSuffix,    eventData: ev };
                 if (ev.color === 'black')    return { statusClass: 'status-blocked',     tooltipText: '🔒 Blocked',               eventData: ev };
                 if (ev.color === 'red')      return { statusClass: 'status-maintenance', tooltipText: '🔧 Maintenance',               eventData: ev };
             }
@@ -586,6 +593,23 @@
     }
 
     // ════════════════════════════════════════════════════
+    //  FIND ALL EVENTS FOR A DATE
+    // ════════════════════════════════════════════════════
+    function findAllEventsForDate(dateStr) {
+        const date = new Date(dateStr);
+        date.setHours(0,0,0,0);
+        const results = [];
+        for (const ev of calendarEvents) {
+            const start = new Date(ev.tgl_mulai); start.setHours(0,0,0,0);
+            const end   = new Date(ev.tgl_selesai); end.setHours(23,59,59,999);
+            if (date >= start && date <= end) {
+                results.push(ev);
+            }
+        }
+        return results;
+    }
+
+    // ════════════════════════════════════════════════════
     //  CLICK ROUTING
     // ════════════════════════════════════════════════════
     function handleDayClick(event, statusClass, eventData, dateStr) {
@@ -599,7 +623,8 @@
         } else {
             hideQuickBlockBubble();
             if (statusClass === 'status-pending' || statusClass === 'status-booked') {
-                openDetailModal(eventData);
+                const allEvents = findAllEventsForDate(dateStr);
+                openDetailModal(eventData, allEvents);
             } else if (statusClass === 'status-blocked') {
                 openBlockedModal(eventData);
             }
@@ -740,7 +765,7 @@
     // ════════════════════════════════════════════════════
     //  MODAL: BOOKING DETAIL
     // ════════════════════════════════════════════════════
-    function openDetailModal(ev) {
+    function showDetailEvent(ev) {
         if (!ev) return;
         document.getElementById('detailDateLabel').textContent = formatDateID(ev.tgl_mulai) + ' — ' + formatDateID(ev.tgl_selesai);
         document.getElementById('detailBookingId').textContent = ev.booking_id;
@@ -751,7 +776,6 @@
         const roomEl = document.getElementById('detailKamar');
         if (ev.nomor_kamar && ev.nomor_kamar !== '-') {
             roomEl.textContent = ev.nomor_kamar;
-            if (ev.aggregate) roomEl.textContent += ' (' + ev.aggregate + ')';
             roomEl.closest('.detail-row').classList.remove('hidden');
         } else {
             roomEl.closest('.detail-row').classList.add('hidden');
@@ -776,6 +800,58 @@
         badge.className = 'inline-flex mb-4 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest border ';
         if (ev.status === 'pending') badge.className += 'bg-amber-50 text-amber-600 border-amber-200 animate-pulse';
         else badge.className += 'bg-blue-50 text-[#1265A8] border-blue-200';
+    }
+
+    function openDetailModal(ev, allEvents) {
+        if (!ev) return;
+
+        const list = allEvents || [ev];
+        const dropdown = document.getElementById('detailRoomDropdown');
+        const dropdownRow = document.getElementById('detailRoomDropdownRow');
+        dropdown.innerHTML = '';
+
+        // Map each room number to its event
+        const roomEventMap = {};
+        const roomSet = new Set();
+        list.forEach(e => {
+            const rooms = (e.nomor_kamar || '-').split(',').map(r => r.trim()).filter(r => r && r !== '-');
+            if (rooms.length === 0) {
+                if (!roomSet.has(e.booking_id)) {
+                    roomSet.add(e.booking_id);
+                    roomEventMap[e.booking_id] = e;
+                }
+            } else {
+                rooms.forEach(r => {
+                    if (!roomSet.has(r)) {
+                        roomSet.add(r);
+                        roomEventMap[r] = e;
+                    }
+                });
+            }
+        });
+
+        const keys = Object.keys(roomEventMap);
+        keys.forEach(k => {
+            const opt = document.createElement('option');
+            opt.value = k;
+            opt.textContent = 'Kamar ' + k;
+            dropdown.appendChild(opt);
+        });
+
+        if (keys.length > 1) {
+            dropdownRow.classList.remove('hidden');
+        } else {
+            dropdownRow.classList.add('hidden');
+        }
+
+        // Show first event
+        showDetailEvent(list[0]);
+
+        // Dropdown change
+        dropdown.onchange = function() {
+            const e = roomEventMap[this.value];
+            if (e) showDetailEvent(e);
+        };
 
         openModal('modalDetail');
     }

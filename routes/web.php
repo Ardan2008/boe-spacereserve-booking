@@ -22,9 +22,11 @@ function calculateRoomStock($fasilitas) {
         return $fasilitas;
     }
 
+    $today = now()->toDateString();
     $activeBookings = \App\Models\Booking::where('fasilitas_id', $fasilitas->id)
         ->whereIn('status', ['pending', 'confirmed', 'booked'])
-        ->where('tgl_selesai', '>=', now()->subDay())
+        ->where('tgl_mulai', '<=', $today)
+        ->where('tgl_selesai', '>=', $today)
         ->get();
 
     $roomToTypeName = [];
