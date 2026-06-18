@@ -762,8 +762,8 @@
                             <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </span>
                     </div>
-                    <p x-show="step4Errors.name" x-transition class="text-[10px] text-red-500 font-semibold mt-1.5 ml-1">Nama minimal 3 karakter, sesuai dengan nama di KTP</p>
-                    <p x-show="step4Success.name" x-transition class="text-[10px] text-emerald-600 font-semibold mt-1.5 ml-1">Nama sesuai KTP ✓</p>
+                    <p x-show="step4Errors.name" x-transition class="text-[10px] text-red-500 font-semibold mt-1.5 ml-1">Nama minimal 3 karakter</p>
+                    <p x-show="step4Success.name" x-transition class="text-[10px] text-emerald-600 font-semibold mt-1.5 ml-1">Nama valid ✓</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative" style="z-index:50;">
@@ -1454,7 +1454,7 @@ document.addEventListener('alpine:init', () => {
                     roomNo = nomorKamar[r - 1];
                 }
             }
-            return 'KAMAR ' + r + (roomNo ? ' (' + roomNo + ')' : '');
+            return 'KAMAR';
         },
 
         // ── Step navigation ───────────────────────────────────────────
@@ -1698,30 +1698,50 @@ document.addEventListener('alpine:init', () => {
             const today = new Date(); today.setHours(0,0,0,0);
             const d = new Date(date); d.setHours(0,0,0,0);
             if (d < today) return 'past';
+
+            let hasPartial = false;
+            let hasBlocked = false;
+            let hasMaintenance = false;
+
             for (const ev of this.calendarEvents) {
                 const s = new Date(ev.tgl_mulai); s.setHours(0,0,0,0);
                 const e = new Date(ev.tgl_selesai); e.setHours(0,0,0,0);
                 if (d >= s && d <= e) {
-                    if (ev.color === 'yellow') return 'pending';
-                    if (ev.color === 'blue')   return 'booked';
-                    if (ev.color === 'black')  return 'blocked';
-                    if (ev.color === 'red')    return 'maintenance';
+                    if (ev.color === 'black')  { hasBlocked = true; continue; }
+                    if (ev.color === 'red')    { hasMaintenance = true; continue; }
+                    // Full occupancy colors — date tidak tersedia sama sekali
+                    if (ev.color === 'purple' || ev.color === 'orange') return 'booked';
+                    // Partial: ada yang booking tapi masih tersisa
+                    hasPartial = true;
                 }
             }
+
+            if (hasMaintenance) return 'maintenance';
+            if (hasBlocked) return 'blocked';
+            if (hasPartial) return 'ready'; // masih ada kamar kosong
+
             return 'ready';
         },
 
         getDayInfo(date) {
             if (!date) return '';
             const d = new Date(date); d.setHours(0,0,0,0);
+            let pendingCount = 0;
+            let bookedCount = 0;
             for (const ev of this.calendarEvents) {
                 const s = new Date(ev.tgl_mulai); s.setHours(0,0,0,0);
                 const e = new Date(ev.tgl_selesai); e.setHours(0,0,0,0);
                 if (d >= s && d <= e) {
-                    if (ev.status === 'maintenance') return 'Perbaikan: ' + (ev.reason || 'Maintenance');
-                    return ev.status.toUpperCase();
+                    if (ev.color === 'black') return 'DIBLOKIR';
+                    if (ev.color === 'red') return 'Perbaikan: ' + (ev.reason || 'Maintenance');
+                    if (ev.color === 'yellow' || ev.color === 'orange') pendingCount++;
+                    if (ev.color === 'blue' || ev.color === 'purple') bookedCount++;
+                    if (ev.aggregate) return ev.status.toUpperCase() + ' (' + ev.aggregate + ')';
                 }
             }
+            if (pendingCount > 0 && bookedCount > 0) return 'TERPESAN (' + (pendingCount + bookedCount) + ')';
+            if (pendingCount > 0) return 'PENDING (' + pendingCount + ')';
+            if (bookedCount > 0) return 'TERPESAN (' + bookedCount + ')';
             return '';
         },
 

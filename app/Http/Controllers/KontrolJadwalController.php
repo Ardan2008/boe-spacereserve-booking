@@ -61,6 +61,39 @@ class KontrolJadwalController extends Controller
             })
             ->get();
 
+        // Hitung total kamar per tipe untuk referensi
+        $fasilitas = \App\Models\Fasilitas::find($fasilitasId);
+        $roomCountByType = [];
+        if ($fasilitas && is_array($fasilitas->paket_harian)) {
+            foreach ($fasilitas->paket_harian as $rt) {
+                $typeName = strtolower(trim($rt['tipe'] ?? ''));
+                $roomCountByType[$typeName] = count($rt['nomor_kamar'] ?? []);
+            }
+        }
+
+        // Kumpulkan semua kamar yang dibooking per hari untuk menentukan warna agregat
+        $bookedRoomsByDate = [];
+        foreach ($bookings as $b) {
+            $startDate = \Carbon\Carbon::parse($b->tgl_mulai);
+            $endDate = \Carbon\Carbon::parse($b->tgl_selesai);
+            $rooms = $b->allocated_rooms ?? [];
+            $typeName = '';
+            if ($b->tipe_kamar_id) {
+                $globalType = \App\Models\GlobalRoomType::find($b->tipe_kamar_id);
+                $typeName = $globalType?->name ?? '';
+            }
+            for ($d = $startDate->copy(); $d->lte($endDate); $d->addDay()) {
+                $key = $d->toDateString();
+                if (!isset($bookedRoomsByDate[$key])) {
+                    $bookedRoomsByDate[$key] = ['rooms' => [], 'total' => 0, 'type' => $typeName];
+                }
+                foreach ($rooms as $r) {
+                    $bookedRoomsByDate[$key]['rooms'][$r] = true;
+                }
+                $bookedRoomsByDate[$key]['total'] = count($bookedRoomsByDate[$key]['rooms']);
+            }
+        }
+
         foreach ($bookings as $b) {
             $color = 'blue';
             if ($b->status === 'pending') {
@@ -69,6 +102,27 @@ class KontrolJadwalController extends Controller
                 $color = 'yellow';
             } elseif ($b->status === 'booked') {
                 $color = 'blue';
+            }
+
+            $rooms = $b->allocated_rooms ?? [];
+            $roomList = is_array($rooms) ? implode(', ', $rooms) : '-';
+            $typeName = '';
+            if ($b->tipe_kamar_id) {
+                $globalType = \App\Models\GlobalRoomType::find($b->tipe_kamar_id);
+                $typeName = $globalType?->name ?? '';
+            }
+
+            // Untuk asrama, cek aggregate occupancy per hari pertama booking
+            $aggregateInfo = '';
+            if ($fasilitas && $fasilitas->tipe === 'asrama') {
+                $startKey = \Carbon\Carbon::parse($b->tgl_mulai)->toDateString();
+                if (isset($bookedRoomsByDate[$startKey])) {
+                    $totalRooms = $roomCountByType[strtolower(trim($typeName))] ?? 0;
+                    $occupied = $bookedRoomsByDate[$startKey]['total'];
+                    if ($totalRooms > 0) {
+                        $aggregateInfo = "{$occupied}/{$totalRooms} kamar terpakai";
+                    }
+                }
             }
 
             $events[] = [
@@ -88,6 +142,9 @@ class KontrolJadwalController extends Controller
                 'total_harga'  => 'Rp ' . number_format($b->total_harga, 0, ',', '.'),
                 'created_at'   => $b->created_at ? $b->created_at->format('d M Y, H:i') : '-',
                 'updated_at'   => $b->updated_at ? $b->updated_at->format('d M Y, H:i') : '-',
+                // room info
+                'nomor_kamar'  => $roomList,
+                'aggregate'    => $aggregateInfo,
             ];
         }
 
@@ -138,6 +195,18 @@ class KontrolJadwalController extends Controller
 
         $events = [];
 
+        // Hitung total kamar per tipe untuk referensi
+        $fasilitas = Fasilitas::find($fasilitasId);
+        $roomCountByType = [];
+        $isAsrama = false;
+        if ($fasilitas && is_array($fasilitas->paket_harian)) {
+            $isAsrama = $fasilitas->tipe === 'asrama';
+            foreach ($fasilitas->paket_harian as $rt) {
+                $typeName = strtolower(trim($rt['tipe'] ?? ''));
+                $roomCountByType[$typeName] = count($rt['nomor_kamar'] ?? []);
+            }
+        }
+
         // 1. Booking events (Sanitized)
         $bookings = Booking::where('fasilitas_id', $fasilitasId)
             ->whereIn('status', ['pending', 'confirmed', 'booked'])
@@ -149,17 +218,69 @@ class KontrolJadwalController extends Controller
                          ->where('tgl_selesai', '>=', $end);
                   });
             })
-            ->select('id', 'fasilitas_id', 'tgl_mulai', 'tgl_selesai', 'status', 'expired_at')
+            ->select('id', 'fasilitas_id', 'tipe_kamar_id', 'allocated_rooms', 'tgl_mulai', 'tgl_selesai', 'status', 'expired_at')
             ->get();
 
+        // Kumpulkan semua kamar yang dibooking per hari
+        $bookedRoomsByDate = [];
+        foreach ($bookings as $b) {
+            $startDate = Carbon::parse($b->tgl_mulai);
+            $endDate = Carbon::parse($b->tgl_selesai);
+            $rooms = is_string($b->allocated_rooms) ? json_decode($b->allocated_rooms, true) : ($b->allocated_rooms ?? []);
+            $typeName = '';
+            if ($b->tipe_kamar_id) {
+                $globalType = GlobalRoomType::find($b->tipe_kamar_id);
+                $typeName = $globalType?->name ?? '';
+            }
+            for ($d = $startDate->copy(); $d->lte($endDate); $d->addDay()) {
+                $key = $d->toDateString();
+                $typeKey = strtolower(trim($typeName));
+                if (!isset($bookedRoomsByDate[$key])) {
+                    $bookedRoomsByDate[$key] = [];
+                }
+                if (!isset($bookedRoomsByDate[$key][$typeKey])) {
+                    $bookedRoomsByDate[$key][$typeKey] = [];
+                }
+                foreach ($rooms as $r) {
+                    $bookedRoomsByDate[$key][$typeKey][$r] = true;
+                }
+            }
+        }
+
+        // Buat satu event per booking (sama seperti sebelumnya)
         foreach ($bookings as $b) {
             $color = 'blue';
+            $isPending = false;
             if ($b->status === 'pending') {
                 $color = 'yellow';
+                $isPending = true;
             } elseif ($b->status === 'confirmed' && $b->expired_at && $b->expired_at->isFuture()) {
                 $color = 'yellow';
+                $isPending = true;
             } elseif ($b->status === 'booked') {
                 $color = 'blue';
+            }
+
+            // Cari aggregate info untuk asrama
+            $aggregateInfo = '';
+            if ($isAsrama) {
+                $startKey = Carbon::parse($b->tgl_mulai)->toDateString();
+                $typeName = '';
+                if ($b->tipe_kamar_id) {
+                    $globalType = GlobalRoomType::find($b->tipe_kamar_id);
+                    $typeName = $globalType?->name ?? '';
+                }
+                $typeKey = strtolower(trim($typeName));
+                $totalRooms = $roomCountByType[$typeKey] ?? 0;
+                $occupied = count($bookedRoomsByDate[$startKey][$typeKey] ?? []);
+                if ($totalRooms > 0) {
+                    $aggregateInfo = "{$occupied}/{$totalRooms}";
+
+                    // Jika semua kamar penuh, ubah warna jadi orange/ungu (penuh)
+                    if ($occupied >= $totalRooms) {
+                        $color = $isPending ? 'orange' : 'purple';
+                    }
+                }
             }
 
             $events[] = [
@@ -168,6 +289,7 @@ class KontrolJadwalController extends Controller
                 'color'       => $color,
                 'tgl_mulai'   => $b->tgl_mulai,
                 'tgl_selesai' => $b->tgl_selesai,
+                'aggregate'   => $aggregateInfo,
             ];
         }
 

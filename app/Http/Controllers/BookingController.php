@@ -75,18 +75,22 @@ class BookingController extends Controller
             $tgl_selesai = \Carbon\Carbon::parse($tgl_mulai)->addYears($duration)->subDay()->format('Y-m-d');
         }
 
-        // --- VALIDASI OVERLAP ---
-        $isOverlapping = \App\Models\Booking::where('fasilitas_id', $request->fasilitas_id)
-            ->whereIn('status', ['pending', 'confirmed', 'booked'])
-            ->where(function ($q) use ($tgl_mulai, $tgl_selesai) {
-                $q->whereBetween('tgl_mulai', [$tgl_mulai, $tgl_selesai])
-                  ->orWhereBetween('tgl_selesai', [$tgl_mulai, $tgl_selesai])
-                  ->orWhere(function ($q2) use ($tgl_mulai, $tgl_selesai) {
-                      $q2->where('tgl_mulai', '<=', $tgl_mulai)
-                         ->where('tgl_selesai', '>=', $tgl_selesai);
-                  });
-            })
-            ->exists();
+        // --- VALIDASI OVERLAP (khusus non-asrama: aula dll, hanya 1 booking per tanggal) ---
+        // Untuk asrama, overlap dicek per kamar di auto-allocation logic, bukan per facility.
+        $isOverlapping = false;
+        if ($fasilitas->tipe !== 'asrama') {
+            $isOverlapping = \App\Models\Booking::where('fasilitas_id', $request->fasilitas_id)
+                ->whereIn('status', ['pending', 'confirmed', 'booked'])
+                ->where(function ($q) use ($tgl_mulai, $tgl_selesai) {
+                    $q->whereBetween('tgl_mulai', [$tgl_mulai, $tgl_selesai])
+                      ->orWhereBetween('tgl_selesai', [$tgl_mulai, $tgl_selesai])
+                      ->orWhere(function ($q2) use ($tgl_mulai, $tgl_selesai) {
+                          $q2->where('tgl_mulai', '<=', $tgl_mulai)
+                             ->where('tgl_selesai', '>=', $tgl_selesai);
+                      });
+                })
+                ->exists();
+        }
 
         $blockedRecords = \App\Models\JadwalBlokir::where('fasilitas_id', $request->fasilitas_id)
             ->where(function ($q) use ($tgl_mulai, $tgl_selesai) {
@@ -162,10 +166,46 @@ class BookingController extends Controller
         $allocatedRooms = [];
         $frontendAllocated = $request->input('allocated_rooms', []);
 
-        if (!empty($frontendAllocated) && is_array($frontendAllocated)) {
-            // Trust the frontend's allocation (it already did the availability check)
-            $roomsNeeded    = (int) $request->rooms_count;
-            $allocatedRooms = array_slice($frontendAllocated, 0, $roomsNeeded);
+        if (!empty($frontendAllocated) && is_array($frontendAllocated) && $tipeKamarId && $fasilitas->paket_harian) {
+            // Verify frontend-allocated rooms are still available (race condition guard)
+            $globalType = \App\Models\GlobalRoomType::find($tipeKamarId);
+            $typeName   = $globalType?->name ?? $request->selected_tipe ?? '';
+
+            $matchingPaket = null;
+            foreach ($fasilitas->paket_harian as $item) {
+                if (strtolower(trim($item['tipe'] ?? '')) === strtolower(trim($typeName))) {
+                    $matchingPaket = $item;
+                    break;
+                }
+            }
+
+            if ($matchingPaket) {
+                $allRoomNumbers = $matchingPaket['nomor_kamar'] ?? [];
+
+                $alreadyAllocated = \App\Models\Booking::where('fasilitas_id', $request->fasilitas_id)
+                    ->where('tipe_kamar_id', $tipeKamarId)
+                    ->whereIn('status', ['pending', 'confirmed', 'booked'])
+                    ->where('tgl_mulai', '<', $tgl_selesai)
+                    ->where('tgl_selesai', '>', $tgl_mulai)
+                    ->whereNotNull('allocated_rooms')
+                    ->get()
+                    ->flatMap(fn ($b) => $b->allocated_rooms ?? [])
+                    ->unique()
+                    ->values()
+                    ->toArray();
+
+                $validRooms = array_values(array_diff($frontendAllocated, $alreadyAllocated));
+                $roomsNeeded = (int) $request->rooms_count;
+
+                if (count($validRooms) < $roomsNeeded) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maaf, kamar yang Anda pilih sudah tidak tersedia. Silakan muat ulang halaman dan coba lagi.'
+                    ], 409);
+                }
+
+                $allocatedRooms = array_slice($validRooms, 0, $roomsNeeded);
+            }
         } elseif ($tipeKamarId && $fasilitas->paket_harian) {
             // Server-side allocation fallback
             $globalType = \App\Models\GlobalRoomType::find($tipeKamarId);
@@ -415,7 +455,7 @@ class BookingController extends Controller
     public function show($id)
     {
         try {
-            $booking = \App\Models\Booking::with(['penyewa', 'fasilitas'])->findOrFail($id);
+            $booking = \App\Models\Booking::with(['penyewa', 'fasilitas', 'tipeKamar'])->findOrFail($id);
 
             $foto_identitas_url = null;
             if ($booking->penyewa && $booking->penyewa->foto_identitas) {
@@ -424,7 +464,39 @@ class BookingController extends Controller
 
             $rooms_data = null;
             if ($booking->fasilitas && $booking->fasilitas->paket_harian) {
-                $rooms_data = $booking->fasilitas->paket_harian;
+                $paketHarian = $booking->fasilitas->paket_harian;
+                $allocated   = $booking->allocated_rooms ?? [];
+
+                if ($booking->tipeKamar) {
+                    $typeName      = strtolower(trim($booking->tipeKamar->name));
+                    $matchingPaket = null;
+                    foreach ($paketHarian as $item) {
+                        if (strtolower(trim($item['tipe'] ?? '')) === $typeName) {
+                            $matchingPaket = $item;
+                            break;
+                        }
+                    }
+                    if ($matchingPaket) {
+                        $kodeBlok  = $matchingPaket['kode_blok'] ?? '';
+                        $fasilitas = $matchingPaket['fasilitas'] ?? [];
+                        if (!empty($allocated)) {
+                            $rooms_data = [];
+                            foreach ($allocated as $idx => $noKamar) {
+                                $label = $kodeBlok ? $kodeBlok . '-' . $noKamar : $noKamar;
+                                $rooms_data[] = [
+                                    'nama'      => 'Kamar ' . ($idx + 1) . ' (' . $label . ')',
+                                    'fasilitas' => $fasilitas,
+                                ];
+                            }
+                        } else {
+                            $rooms_data = [$matchingPaket];
+                        }
+                    } else {
+                        $rooms_data = $paketHarian;
+                    }
+                } else {
+                    $rooms_data = $paketHarian;
+                }
             }
 
             return response()->json([

@@ -224,6 +224,19 @@
                                     </svg>
                                     {{ $rooms }} Kamar &middot; maks {{ $rooms * 2 }} slot dewasa
                                 </div>
+                                {{-- Nomor kamar dialokasikan --}}
+                                @php
+                                    $allocated = $booking->allocated_rooms ?? [];
+                                    $roomStr = is_array($allocated) ? implode(', ', $allocated) : ($allocated ?: '');
+                                @endphp
+                                @if($roomStr)
+                                <div class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full mb-2">
+                                    <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                                    </svg>
+                                    {{ $roomStr }}
+                                </div>
+                                @endif
                                 @endif
 
                                 {{-- Dewasa --}}
@@ -458,6 +471,18 @@
                                 <div class="inline-flex items-center gap-1 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full mb-2">
                                     {{ $rooms }} Kamar
                                 </div>
+                                @php
+                                    $allocated = $booking->allocated_rooms ?? [];
+                                    $roomStr = is_array($allocated) ? implode(', ', $allocated) : ($allocated ?: '');
+                                @endphp
+                                @if($roomStr)
+                                <div class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full mb-2">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                                    </svg>
+                                    {{ $roomStr }}
+                                </div>
+                                @endif
                                 @endif
                                 <div class="flex flex-wrap gap-1.5">
                                     <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -671,6 +696,15 @@
                                     <span class="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
                                         {{ $rooms }} Kamar
                                     </span>
+                                    @php
+                                        $allocated = $booking->allocated_rooms ?? [];
+                                        $roomStr = is_array($allocated) ? implode(', ', $allocated) : ($allocated ?: '');
+                                    @endphp
+                                    @if($roomStr)
+                                    <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                        {{ $roomStr }}
+                                    </span>
+                                    @endif
                                     <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
                                         {{ $adults }} Dewasa
                                     </span>
@@ -1153,16 +1187,40 @@
 
         // ── Admin actions ─────────────────────────────────────────────────────────
         function approveBooking(id) {
-            Swal.fire({
-                title: 'Setujui Pengajuan?',
-                text: 'Status akan berubah menjadi Confirmed dan kwitansi otomatis dikirimkan ke email penyewa.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#2563eb',
-                confirmButtonText: 'Ya, Setujui & Kirim',
-                cancelButtonText: 'Batal',
-                customClass: { popup: 'rounded-[1.5rem]' }
-            }).then(r => { if (r.isConfirmed) processAction(`/admin/bookings/${id}/approve`); });
+            // Fetch room allocation info before showing confirmation
+            fetch(`/admin/bookings/${id}/detail`)
+                .then(r => r.json())
+                .then(data => {
+                    let roomInfo = '';
+                    if (data.success && data.nomor_kamar && data.nomor_kamar !== '-') {
+                        roomInfo = '<p style="margin-top:12px;padding:10px 14px;background:#eff6ff;border-radius:12px;border:1px solid #bfdbfe;text-align:center">' +
+                            '<span style="font-size:11px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px">Nomor Kamar Dialokasikan</span>' +
+                            '<span style="font-size:15px;font-weight:800;color:#1e40af">' + data.nomor_kamar + '</span></p>';
+                    }
+                    Swal.fire({
+                        title: 'Setujui Pengajuan?',
+                        html: 'Status akan berubah menjadi <strong>Confirmed</strong> dan kwitansi otomatis dikirimkan ke email penyewa.' + roomInfo,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#2563eb',
+                        confirmButtonText: 'Ya, Setujui & Kirim',
+                        cancelButtonText: 'Batal',
+                        customClass: { popup: 'rounded-[1.5rem]' }
+                    }).then(r => { if (r.isConfirmed) processAction(`/admin/bookings/${id}/approve`); });
+                })
+                .catch(() => {
+                    // Fallback tanpa room info
+                    Swal.fire({
+                        title: 'Setujui Pengajuan?',
+                        text: 'Status akan berubah menjadi Confirmed dan kwitansi otomatis dikirimkan ke email penyewa.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#2563eb',
+                        confirmButtonText: 'Ya, Setujui & Kirim',
+                        cancelButtonText: 'Batal',
+                        customClass: { popup: 'rounded-[1.5rem]' }
+                    }).then(r => { if (r.isConfirmed) processAction(`/admin/bookings/${id}/approve`); });
+                });
         }
 
         function confirmCheckIn(id) {

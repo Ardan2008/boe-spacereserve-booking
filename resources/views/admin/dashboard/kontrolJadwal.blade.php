@@ -338,6 +338,10 @@
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Paket</span>
                     <span id="detailPaket" class="font-bold text-slate-700"></span>
                 </div>
+                <div class="flex justify-between items-start py-2.5 border-b border-slate-50 detail-row hidden">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kamar</span>
+                    <span id="detailKamar" class="font-bold text-slate-700 text-right"></span>
+                </div>
                 <div class="flex justify-between items-start py-2.5 border-b border-slate-50">
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
                     <span id="detailHarga" class="font-black text-[#1265A8]"></span>
@@ -527,9 +531,14 @@
             const start = new Date(ev.tgl_mulai); start.setHours(0,0,0,0);
             const end   = new Date(ev.tgl_selesai); end.setHours(23,59,59,999);
             if (date >= start && date <= end) {
-                if (ev.color === 'yellow')   return { statusClass: 'status-pending',     tooltipText: '🕐 Pending — ' + ev.nama,   eventData: ev };
-                if (ev.color === 'blue')     return { statusClass: 'status-booked',      tooltipText: '✅ Booked — ' + ev.nama,    eventData: ev };
-                if (ev.color === 'purple')   return { statusClass: 'status-booked',      tooltipText: '🏠 Booked — ' + ev.nama,    eventData: ev };
+                let suffix = '';
+                if (ev.nomor_kamar && ev.nomor_kamar !== '-') {
+                    suffix = ' — Kamar: ' + ev.nomor_kamar;
+                    if (ev.aggregate) suffix += ' (' + ev.aggregate + ')';
+                }
+                if (ev.color === 'yellow')   return { statusClass: 'status-pending',     tooltipText: '🕐 Pending — ' + ev.nama + suffix,   eventData: ev };
+                if (ev.color === 'blue')     return { statusClass: 'status-booked',      tooltipText: '✅ Booked — ' + ev.nama + suffix,    eventData: ev };
+                if (ev.color === 'purple')   return { statusClass: 'status-booked',      tooltipText: '🏠 Booked — ' + ev.nama + suffix,    eventData: ev };
                 if (ev.color === 'black')    return { statusClass: 'status-blocked',     tooltipText: '🔒 Blocked',               eventData: ev };
                 if (ev.color === 'red')      return { statusClass: 'status-maintenance', tooltipText: '🔧 Maintenance',               eventData: ev };
             }
@@ -739,6 +748,14 @@
         document.getElementById('detailEmail').textContent = ev.email;
         document.getElementById('detailFasilitas').textContent = ev.fasilitas;
         document.getElementById('detailPaket').textContent = ev.package_type.charAt(0).toUpperCase() + ev.package_type.slice(1);
+        const roomEl = document.getElementById('detailKamar');
+        if (ev.nomor_kamar && ev.nomor_kamar !== '-') {
+            roomEl.textContent = ev.nomor_kamar;
+            if (ev.aggregate) roomEl.textContent += ' (' + ev.aggregate + ')';
+            roomEl.closest('.detail-row').classList.remove('hidden');
+        } else {
+            roomEl.closest('.detail-row').classList.add('hidden');
+        }
         document.getElementById('detailHarga').textContent = ev.total_harga;
         document.getElementById('detailCreated').textContent = ev.created_at;
         document.getElementById('detailUpdated').textContent = ev.updated_at;
