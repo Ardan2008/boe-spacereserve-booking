@@ -491,24 +491,52 @@
                             </p>
                         </div>
                         <div class="flex items-center gap-4">
-                            <button @click="decAdults()"
-                                class="w-11 h-11 bg-white shadow-sm rounded-2xl flex items-center justify-center font-black text-xl text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
-                                :class="adults<=1?'opacity-40 cursor-not-allowed':''">−</button>
-                            <span class="text-2xl font-black w-8 text-center"
-                                  :class="step2Errors.adults?'text-red-600':'text-gray-800'"
-                                  x-text="adults"></span>
-                            <button @click="incAdults()"
-                                class="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xl transition-all"
-                                :class="adults >= maxAdultsAllowed
-                                    ? 'bg-amber-100 text-amber-500 hover:bg-amber-200'
-                                    : 'bg-white shadow-sm text-blue-600 hover:bg-blue-600 hover:text-white'">
-                                <span x-show="adults < maxAdultsAllowed">+</span>
-                                <svg x-show="adults >= maxAdultsAllowed" class="w-5 h-5 text-amber-500"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                </svg>
-                            </button>
+                            <template x-if="currentFacility?.tipe === 'aula'">
+                                <input type="number"
+                                    x-model.number="adults"
+                                    min="1"
+                                    :max="currentFacility?.max_dewasa || 9999"
+                                    @change="
+                                        const max = currentFacility?.max_dewasa || 9999;
+                                        if (adults > max) {
+                                            adults = max;
+                                            Swal.fire({
+                                                icon: 'warning',
+                                                title: 'Melebihi Kapasitas',
+                                                text: 'Jumlah peserta tidak boleh melebihi kapasitas aula (' + max + ' orang).',
+                                                confirmButtonColor: '#1d6fa5',
+                                                confirmButtonText: 'Mengerti',
+                                                customClass: { popup: 'rounded-[2rem] p-8' }
+                                            });
+                                        } else if (adults < 1 || !adults) {
+                                            adults = 1;
+                                        }
+                                    "
+                                    class="w-32 px-4 py-3 text-center text-2xl font-black bg-white border-2 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1d6fa5] outline-none shadow-sm transition-all"
+                                    :class="step2Errors.adults ? 'border-red-400 bg-red-50' : 'border-slate-200'">
+                            </template>
+                            <template x-if="currentFacility?.tipe !== 'aula'">
+                                <div class="flex items-center gap-4">
+                                    <button @click="decAdults()"
+                                        class="w-11 h-11 bg-white shadow-sm rounded-2xl flex items-center justify-center font-black text-xl text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
+                                        :class="adults<=1?'opacity-40 cursor-not-allowed':''">−</button>
+                                    <span class="text-2xl font-black w-8 text-center"
+                                          :class="step2Errors.adults?'text-red-600':'text-gray-800'"
+                                          x-text="adults"></span>
+                                    <button @click="incAdults()"
+                                        class="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xl transition-all"
+                                        :class="adults >= maxAdultsAllowed
+                                            ? 'bg-amber-100 text-amber-500 hover:bg-amber-200'
+                                            : 'bg-white shadow-sm text-blue-600 hover:bg-blue-600 hover:text-white'">
+                                        <span x-show="adults < maxAdultsAllowed">+</span>
+                                        <svg x-show="adults >= maxAdultsAllowed" class="w-5 h-5 text-amber-500"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
                         </div>
                     </div>
                     <div x-show="showRoomHint && currentFacility?.tipe==='asrama'" x-transition

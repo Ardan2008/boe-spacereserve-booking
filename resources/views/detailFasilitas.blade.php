@@ -354,6 +354,108 @@
         </div>
         @endif
 
+        {{-- ══════════════════════════════════════════════
+             SPESIFIKASI AULA  (aula only)
+             ══════════════════════════════════════════════ --}}
+        @if($fasilitas->tipe === 'aula' && $fasilitas->paket_harian && count($fasilitas->paket_harian))
+        @php $aula = $fasilitas->paket_harian[0]; @endphp
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="h-px flex-1 bg-slate-200"></div>
+                <h2 class="text-sm font-black uppercase tracking-[0.25em] text-[#1d6fa5] whitespace-nowrap">Spesifikasi Aula</h2>
+                <div class="h-px flex-1 bg-slate-200"></div>
+            </div>
+
+            <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+
+                {{-- Ukuran + Kapasitas --}}
+                @if((!empty($aula['panjang']) && $aula['panjang'] > 0) || (!empty($aula['lebar']) && $aula['lebar'] > 0))
+                <div class="px-8 pt-8 pb-4">
+                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4">Dimensi & Kapasitas</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        @if(!empty($aula['panjang']) && !empty($aula['lebar']) && $aula['panjang'] > 0 && $aula['lebar'] > 0)
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ukuran</p>
+                            <p class="text-sm font-black text-slate-800">{{ $aula['panjang'] }} × {{ $aula['lebar'] }} m</p>
+                            <p class="text-[9px] font-bold text-slate-400 mt-0.5">{{ number_format($aula['panjang'] * $aula['lebar'], 0, ',', '.') }} m²</p>
+                        </div>
+                        @endif
+                        <div class="bg-blue-50 rounded-2xl p-4 text-center border border-blue-100">
+                            <p class="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Kapasitas</p>
+                            <p class="text-sm font-black text-[#1d6fa5]">{{ $fasilitas->max_dewasa ?? ($aula['max_dewasa'] ?? '-') }} Orang</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Jam Operasional</p>
+                            <p class="text-xs font-black text-slate-800">{{ $fasilitas->jam_operasional ?? '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                {{-- Harga Sewa --}}
+                @php
+                    $adaHarga = (!empty($aula['harga_harian'])   && $aula['harga_harian']   > 0)
+                             || (!empty($aula['harga_mingguan']) && $aula['harga_mingguan'] > 0)
+                             || (!empty($aula['harga_bulanan'])  && $aula['harga_bulanan']  > 0)
+                             || (!empty($aula['harga_tahunan'])  && $aula['harga_tahunan']  > 0);
+                @endphp
+                @if($adaHarga)
+                <div class="px-8 pt-4 pb-8">
+                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4">Harga Sewa</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        @if(!empty($aula['harga_harian']) && $aula['harga_harian'] > 0)
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Per Hari</p>
+                            <p class="text-sm font-black text-slate-800">Rp {{ number_format($aula['harga_harian'], 0, ',', '.') }}</p>
+                        </div>
+                        @endif
+                        @if(!empty($aula['harga_mingguan']) && $aula['harga_mingguan'] > 0)
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Per Minggu</p>
+                            <p class="text-sm font-black text-slate-800">Rp {{ number_format($aula['harga_mingguan'], 0, ',', '.') }}</p>
+                        </div>
+                        @endif
+                        @if(!empty($aula['harga_bulanan']) && $aula['harga_bulanan'] > 0)
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Per Bulan</p>
+                            <p class="text-sm font-black text-slate-800">Rp {{ number_format($aula['harga_bulanan'], 0, ',', '.') }}</p>
+                        </div>
+                        @endif
+                        @if(!empty($aula['harga_tahunan']) && $aula['harga_tahunan'] > 0)
+                        <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Per Tahun</p>
+                            <p class="text-sm font-black text-slate-800">Rp {{ number_format($aula['harga_tahunan'], 0, ',', '.') }}</p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
+
+                {{-- Fasilitas Aula --}}
+                @php $fasAula = $aula['fasilitas_aula'] ?? []; @endphp
+                @if(count($fasAula) > 0)
+                <div class="px-8 pb-8 {{ $adaHarga ? '' : 'pt-4' }}">
+                    <p class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4">Fasilitas</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($fasAula as $fas)
+                        @php $namaFas = is_array($fas) ? ($fas['nama'] ?? '') : $fas; $jumlahFas = is_array($fas) ? ($fas['jumlah'] ?? 1) : 1; @endphp
+                        @if($namaFas)
+                        <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-700 shadow-sm">
+                            {{ $namaFas }}
+                            @if($jumlahFas > 0)
+                            <span class="bg-[#1d6fa5] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{{ $jumlahFas }}</span>
+                            @endif
+                        </span>
+                        @endif
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+            </div>
+        </div>
+        @endif
+
         {{-- ── Bottom CTA ── --}}
         <div class="flex flex-col sm:flex-row gap-4">
             <a href="{{ route('formBooking', ['id' => $fasilitas->id]) }}"

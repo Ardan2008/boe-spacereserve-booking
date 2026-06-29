@@ -169,68 +169,77 @@
         <div class="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-indigo-100 blur-[120px] rounded-full opacity-50"></div>
     </div>
 
-    <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center" x-data="facilityEditor()">
-        <div class="w-full max-w-5xl bg-white/80 backdrop-blur-xl rounded-[3rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.08)] border border-white overflow-hidden transition-all duration-500">
+    <div class="py-12 px-4 sm:px-6 lg:px-8" x-data="facilityEditor()">
+        <div class="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-xl rounded-[3rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.08)] border border-white transition-all duration-500">
 
-            <div class="pt-10 pb-6 px-10 text-center">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 mb-4 bg-blue-50/50 rounded-full border border-blue-100 shadow-sm">
-                    <span class="relative flex h-2 w-2">
+            <div class="pt-16 pb-10 px-10 text-center">
+                <div class="inline-flex items-center gap-3 px-6 py-2 mb-6 bg-blue-50/50 rounded-full border border-blue-100 shadow-sm">
+                    <span class="relative flex h-3 w-3">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-[#1265A8]"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-[#1265A8]"></span>
                     </span>
-                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-[#1265A8]">Update Mode | <span x-text="tipe"></span></span>
+                    <span class="text-sm font-black uppercase tracking-[0.2em] text-[#1265A8]">Update Mode | <span x-text="tipe"></span></span>
                 </div>
-                <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase">
+                <h2 class="text-5xl font-black text-slate-900 tracking-tight uppercase">
                     Edit <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#1265A8] to-blue-400" x-text="tipe === 'asrama' ? 'Asrama' : 'Aula'">Facility</span> Data
                 </h2>
-                <div class="h-1.5 w-12 bg-gradient-to-r from-[#1265A8] to-blue-400 mx-auto mt-4 rounded-full"></div>
+                <div class="h-1.5 w-16 bg-gradient-to-r from-[#1265A8] to-blue-400 mx-auto mt-6 rounded-full"></div>
 
-                <div class="flex justify-center gap-4 mt-8">
+                <div class="flex justify-center gap-4 mt-10">
                     <button type="button" @click="confirmTypeChange('asrama')" :class="tipe === 'asrama' ? 'bg-[#1265A8] text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'" class="px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300">Asrama</button>
                     <button type="button" @click="confirmTypeChange('aula')" :class="tipe === 'aula' ? 'bg-[#1265A8] text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'" class="px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300">Aula</button>
                     <input type="hidden" name="tipe" :value="tipe">
                 </div>
             </div>
 
-            <form id="mainForm" action="{{ route('fasilitas.update', $fasilitas->id) }}" method="POST" enctype="multipart/form-data" class="p-8 lg:p-12 pt-6" novalidate>
+            @php
+                $aulaP = $fasilitas->paket_harian[0] ?? [];
+                $aulaHargaHarian   = isset($aulaP['harga_harian'])   && $aulaP['harga_harian']   > 0 ? (float) $aulaP['harga_harian']   : (float) ($fasilitas->harga ?? 0);
+                $aulaHargaMingguan = isset($aulaP['harga_mingguan']) && $aulaP['harga_mingguan'] > 0 ? (float) $aulaP['harga_mingguan'] : 0;
+                $aulaHargaBulanan  = isset($aulaP['harga_bulanan'])  && $aulaP['harga_bulanan']  > 0 ? (float) $aulaP['harga_bulanan']  : (float) ($fasilitas->harga_bulanan ?? 0);
+                $aulaHargaTahunan  = isset($aulaP['harga_tahunan'])  && $aulaP['harga_tahunan']  > 0 ? (float) $aulaP['harga_tahunan']  : 0;
+            @endphp
+
+            <form id="mainForm" action="{{ route('fasilitas.update', $fasilitas->id) }}" method="POST" enctype="multipart/form-data" class="p-10 lg:p-14 pt-8" novalidate>
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="tipe" :value="tipe">
                 <input type="hidden" name="paket_harian" id="paketHarianInput" value="">
                 <input type="hidden" name="rooms_data" id="roomsDataInput" value="">
+                <div id="labelsHiddenContainer"></div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
-                    <div class="space-y-6">
+                    <div class="space-y-8">
 
                         <div class="group">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Fasilitas</label>
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Nama Fasilitas</label>
                             <input type="text" id="inputNama" name="nama" value="{{ old('nama', $fasilitas->nama) }}"
                                 class="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all duration-300 shadow-sm font-semibold" required>
                             <span class="error-msg" id="errNama">⚠ Nama minimal 2 huruf dan tidak boleh mengandung angka.</span>
                         </div>
 
                         <div class="group">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Deskripsi Singkat</label>
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Deskripsi Singkat</label>
                             <textarea id="inputDeskripsi" name="deskripsi" rows="3"
                                 class="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all duration-300 shadow-sm resize-none font-medium leading-relaxed" required>{{ old('deskripsi', $fasilitas->deskripsi) }}</textarea>
                             <span class="error-msg" id="errDeskripsi">⚠ Deskripsi tidak boleh kosong.</span>
                         </div>
 
                         <div class="group">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Detail Fasilitas</label>
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Detail Fasilitas</label>
                             <textarea name="detail" rows="5"
                                 class="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all duration-300 shadow-sm resize-none font-medium leading-relaxed">{{ old('detail', $fasilitas->detail) }}</textarea>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jam Operasional</label>
+                                <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Jam Operasional</label>
                                 <input type="text" name="jam_operasional" value="{{ old('jam_operasional', $fasilitas->jam_operasional) }}" placeholder="08.00 - 22.00"
                                     class="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all duration-300 shadow-sm font-semibold">
                             </div>
                             <div x-show="tipe === 'aula'">
-                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Kapasitas (Orang)</label>
+                                <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Kapasitas (Orang)</label>
                                 <input type="number" name="max_dewasa" value="{{ old('max_dewasa', $fasilitas->max_dewasa) }}" placeholder="Total"
                                     class="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all duration-300 shadow-sm font-semibold">
                             </div>
@@ -238,7 +247,7 @@
 
                         {{-- Max Durasi Sewa — full-width 4-column grid, asrama only --}}
                         <div x-show="tipe === 'asrama'">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Max Durasi Sewa</label>
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Max Durasi Sewa</label>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
 
                                 <div>
@@ -273,7 +282,7 @@
                         </div>
 
                         <div x-show="tipe === 'asrama'">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">
                                 Jumlah Kamar Tersedia
                             </label>
                             <div class="kamar-stepper-wrap" id="kamarStepperWrap">
@@ -300,35 +309,59 @@
                             </div>
                         </div>
 
-                        <div class="group">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Labels / Fitur</label>
+                        <div class="group" x-show="tipe === 'asrama'">
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Labels / Fitur</label>
                             <div class="flex flex-wrap gap-2 mb-3">
-                                <template x-for="label in labels[tipe]" :key="label">
+                                <template x-for="label in labels['asrama']" :key="label">
                                     <div class="relative group/label">
                                         <label class="cursor-pointer">
-                                            <input type="checkbox" name="labels[]" :value="label" x-model="selectedLabels" class="hidden">
-                                                <span :class="selectedLabels.includes(label) ? 'bg-[#1265A8] text-white border-[#1265A8]' : 'bg-white text-slate-400 border-slate-200'"
+                                            <input type="checkbox" :value="label" x-model="selectedLabelsAsrama" class="hidden">
+                                                <span :class="selectedLabelsAsrama.includes(label) ? 'bg-[#1265A8] text-white border-[#1265A8]' : 'bg-white text-slate-400 border-slate-200'"
                                                     class="relative px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all duration-300 inline-flex items-center"
                                                     x-text="label"></span>
-                                            <button type="button" @click="removeLabel(label)"
+                                            <button type="button" @click="removeLabelAsrama(label)"
                                                 class="absolute top-0 right-0 bg-red-500/20 text-red-600 text-lg font-bold opacity-0 group-hover/label:opacity-100 transition-opacity duration-200 rounded-xl"
-                                                x-show="labels[tipe].length > 1">&times;</button>
+                                                x-show="labels['asrama'].length > 1">&times;</button>
                                         </label>
                                     </div>
                                 </template>
                             </div>
                             <div class="flex gap-2">
-                                <input type="text" x-model="customLabel" @keydown.enter.prevent="addCustomLabel()" placeholder="Tambah fitur custom..."
+                                <input type="text" x-model="customLabelAsrama" @keydown.enter.prevent="addCustomLabelAsrama()" placeholder="Tambah fitur custom..."
                                     class="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold outline-none focus:border-[#1265A8] transition-all">
-                                <button type="button" @click="addCustomLabel()" class="px-4 py-2 bg-[#1265A8] text-white rounded-xl hover:bg-slate-800 transition-all font-black text-sm">+</button>
+                                <button type="button" @click="addCustomLabelAsrama()" class="px-4 py-2 bg-[#1265A8] text-white rounded-xl hover:bg-slate-800 transition-all font-black text-sm">+</button>
+                            </div>
+                        </div>
+
+                        <div class="group" x-show="tipe === 'aula'" x-cloak>
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Labels / Fitur</label>
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <template x-for="label in labels['aula']" :key="label">
+                                    <div class="relative group/label">
+                                        <label class="cursor-pointer">
+                                            <input type="checkbox" :value="label" x-model="selectedLabelsAula" class="hidden">
+                                                <span :class="selectedLabelsAula.includes(label) ? 'bg-[#1265A8] text-white border-[#1265A8]' : 'bg-white text-slate-400 border-slate-200'"
+                                                    class="relative px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all duration-300 inline-flex items-center"
+                                                    x-text="label"></span>
+                                            <button type="button" @click="removeLabelAula(label)"
+                                                class="absolute top-0 right-0 bg-red-500/20 text-red-600 text-lg font-bold opacity-0 group-hover/label:opacity-100 transition-opacity duration-200 rounded-xl"
+                                                x-show="labels['aula'].length > 1">&times;</button>
+                                        </label>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="text" x-model="customLabelAula" @keydown.enter.prevent="addCustomLabelAula()" placeholder="Tambah fitur custom..."
+                                    class="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold outline-none focus:border-[#1265A8] transition-all">
+                                <button type="button" @click="addCustomLabelAula()" class="px-4 py-2 bg-[#1265A8] text-white rounded-xl hover:bg-slate-800 transition-all font-black text-sm">+</button>
                             </div>
                         </div>
                     </div>
 
-                    <div class="space-y-6">
-                        <div class="space-y-6">
+                    <div class="space-y-8">
+                        <div class="space-y-8">
                             <div class="w-full">
-                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Thumbnail Cards</label>
+                                <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Thumbnail Cards</label>
                                 <div id="dropzone" class="relative overflow-hidden rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50/50 hover:border-[#1265A8] transition-all duration-500 h-48 flex items-center justify-center group/drop cursor-pointer">
                                     <img id="preview" src="{{ $fasilitas->image ? '/storage/fasilitas/' . $fasilitas->image : '' }}" class="absolute inset-0 w-full h-full object-cover z-10" style="{{ $fasilitas->image ? '' : 'display:none' }}">
                                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/drop:opacity-100 transition-opacity duration-300 z-20 flex flex-col items-center justify-center text-white">
@@ -345,7 +378,7 @@
                             </div>
 
                             <div class="w-full">
-                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Preview Gallery (3 Foto)</label>
+                                <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 ml-1">Preview Gallery (3 Foto)</label>
                                 <div class="grid grid-cols-3 gap-3">
                                     <template x-for="i in [0, 1, 2]" :key="i">
                                         <div class="relative overflow-hidden rounded-2xl transition-all duration-500 h-32 flex items-center justify-center group/gal cursor-pointer"
@@ -371,7 +404,166 @@
                             </div>
                         </div>
 
-                        <div x-show="tipe === 'asrama'" x-cloak class="w-full bg-gradient-to-br from-blue-50/40 to-indigo-50/30 rounded-3xl border border-blue-100/60 p-6 space-y-4">
+                        <div x-show="tipe === 'aula'" x-cloak class="w-full bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xs font-black uppercase tracking-widest text-slate-500">Spesifikasi Aula</h3>
+                                <span class="text-[10px] font-semibold text-slate-400">Ruang Serbaguna</span>
+                            </div>
+
+                            {{-- Ukuran Aula --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Ukuran Aula</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" name="aula_panjang" id="aulaPanjangEdit" min="0" step="0.1" placeholder="0"
+                                        value="{{ old('aula_panjang', $fasilitas->paket_harian[0]['panjang'] ?? '') }}"
+                                        @input="aulaHitungLuasEdit()"
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm text-center shadow-sm">
+                                    <span class="text-lg font-black text-slate-400 flex-shrink-0">×</span>
+                                    <input type="number" name="aula_lebar" id="aulaLebarEdit" min="0" step="0.1" placeholder="0"
+                                        value="{{ old('aula_lebar', $fasilitas->paket_harian[0]['lebar'] ?? '') }}"
+                                        @input="aulaHitungLuasEdit()"
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm text-center shadow-sm">
+                                    <span class="text-xs font-black text-slate-400 flex-shrink-0 whitespace-nowrap">m²</span>
+                                </div>
+                                <div class="mt-2 px-4 py-2 bg-blue-50/50 border border-blue-100 rounded-xl font-bold text-sm text-[#1265A8] shadow-sm">
+                                    <span x-text="aulaLuasEdit ? 'Luas: ' + Number(aulaLuasEdit).toLocaleString('id-ID') + ' m²' : '—'"></span>
+                                </div>
+                            </div>
+
+                            {{-- Kapasitas Aula --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Kapasitas (Orang)</label>
+                                <input type="number" name="max_dewasa" value="{{ old('max_dewasa', $fasilitas->max_dewasa) }}" placeholder="Contoh: 200"
+                                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                            </div>
+
+                            {{-- Fasilitas Aula --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Fasilitas Aula</label>
+
+                                {{-- List fasilitas yang sudah ditambah --}}
+                                <div class="space-y-2 mb-3" x-show="aulaFasilitas.length > 0">
+                                    <template x-for="(fas, fasIdx) in aulaFasilitas" :key="fasIdx">
+                                        <div class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-2.5 hover:border-[#1265A8] transition-all group/fas">
+                                            <span class="flex-1 text-xs font-black text-slate-700 uppercase tracking-wide" x-text="fas.nama"></span>
+                                            <div class="flex items-center gap-2 flex-shrink-0">
+                                                <button type="button" @click="fas.jumlah > 1 && fas.jumlah--"
+                                                    class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-base flex items-center justify-center transition-all">−</button>
+                                                <span class="w-8 text-center text-sm font-black text-slate-800" x-text="fas.jumlah"></span>
+                                                <button type="button" @click="fas.jumlah++"
+                                                    class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-base flex items-center justify-center transition-all">+</button>
+                                            </div>
+                                            <button type="button" @click="aulaFasilitas.splice(fasIdx, 1)"
+                                                class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-500 text-red-400 hover:text-white font-black text-base flex items-center justify-center transition-all opacity-0 group-hover/fas:opacity-100 flex-shrink-0">×</button>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                {{-- Form tambah: nama + jumlah + tombol + --}}
+                                <div class="flex items-center gap-2">
+                                    <input type="text" x-model="aulaFasNama"
+                                        @keydown.enter.prevent="if(aulaFasNama.trim() && aulaFasJumlah >= 1){ aulaFasilitas.push({nama:aulaFasNama.trim(), jumlah:aulaFasJumlah}); aulaFasNama=''; aulaFasJumlah=1; }"
+                                        placeholder="Nama fasilitas (misal: AC)"
+                                        class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#1265A8] transition-all">
+                                    <input type="number" x-model.number="aulaFasJumlah" min="1"
+                                        @keydown.enter.prevent="if(aulaFasNama.trim() && aulaFasJumlah >= 1){ aulaFasilitas.push({nama:aulaFasNama.trim(), jumlah:aulaFasJumlah}); aulaFasNama=''; aulaFasJumlah=1; }"
+                                        placeholder="Jml"
+                                        class="w-20 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-center outline-none focus:border-[#1265A8] transition-all">
+                                    <button type="button"
+                                        @click="if(aulaFasNama.trim() && aulaFasJumlah >= 1){ aulaFasilitas.push({nama:aulaFasNama.trim(), jumlah:aulaFasJumlah}); aulaFasNama=''; aulaFasJumlah=1; }"
+                                        class="px-4 py-2.5 bg-[#1265A8] text-white rounded-xl hover:bg-slate-800 transition-all font-black text-sm flex-shrink-0">+</button>
+                                </div>
+                                <p class="text-[9px] text-slate-400 font-medium mt-1.5 ml-1">Isi nama dan jumlah, lalu tekan Enter atau klik +. Hover item untuk hapus.</p>
+                            </div>
+
+                            {{-- Harga Sewa Aula --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Harga Sewa</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <span class="block text-[9px] font-bold text-slate-500 mb-1 ml-1 uppercase tracking-wider">Per Hari</span>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 font-black text-[#1265A8] text-xs pointer-events-none">Rp</span>
+                                            <input type="text" id="aulaHargaHarian"
+                                                @input="formatHargaAula($event, 'harian')"
+                                                value="{{ old('aula_harga_harian', $aulaHargaHarian > 0 ? number_format($aulaHargaHarian, 0, ',', '.') : '') }}"
+                                                placeholder="0"
+                                                class="w-full pl-8 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                                            <input type="hidden" name="aula_harga_harian" id="aulaHargaHarianHidden" value="{{ old('aula_harga_harian', $aulaHargaHarian) }}">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[9px] font-bold text-slate-500 mb-1 ml-1 uppercase tracking-wider">Per Minggu</span>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 font-black text-[#1265A8] text-xs pointer-events-none">Rp</span>
+                                            <input type="text" id="aulaHargaMingguan"
+                                                @input="formatHargaAula($event, 'mingguan')"
+                                                value="{{ old('aula_harga_mingguan', $aulaHargaMingguan > 0 ? number_format($aulaHargaMingguan, 0, ',', '.') : '') }}"
+                                                placeholder="0"
+                                                class="w-full pl-8 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                                            <input type="hidden" name="aula_harga_mingguan" id="aulaHargaMingguanHidden" value="{{ old('aula_harga_mingguan', $aulaHargaMingguan) }}">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[9px] font-bold text-slate-500 mb-1 ml-1 uppercase tracking-wider">Per Bulan</span>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 font-black text-[#1265A8] text-xs pointer-events-none">Rp</span>
+                                            <input type="text" id="aulaHargaBulanan"
+                                                @input="formatHargaAula($event, 'bulanan')"
+                                                value="{{ old('aula_harga_bulanan', $aulaHargaBulanan > 0 ? number_format($aulaHargaBulanan, 0, ',', '.') : '') }}"
+                                                placeholder="0"
+                                                class="w-full pl-8 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                                            <input type="hidden" name="aula_harga_bulanan" id="aulaHargaBulananHidden" value="{{ old('aula_harga_bulanan', $aulaHargaBulanan) }}">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[9px] font-bold text-slate-500 mb-1 ml-1 uppercase tracking-wider">Per Tahun</span>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 font-black text-[#1265A8] text-xs pointer-events-none">Rp</span>
+                                            <input type="text" id="aulaHargaTahunan"
+                                                @input="formatHargaAula($event, 'tahunan')"
+                                                value="{{ old('aula_harga_tahunan', $aulaHargaTahunan > 0 ? number_format($aulaHargaTahunan, 0, ',', '.') : '') }}"
+                                                placeholder="0"
+                                                class="w-full pl-8 pr-3 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                                            <input type="hidden" name="aula_harga_tahunan" id="aulaHargaTahunanHidden" value="{{ old('aula_harga_tahunan', $aulaHargaTahunan) }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Max Durasi Sewa --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Max Durasi Sewa</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 ml-0.5">Hari</label>
+                                        <input type="number" name="max_durasi_hari" min="0"
+                                            value="{{ old('max_durasi_hari', $fasilitas->max_durasi_hari) }}"
+                                            class="w-full px-4 py-3 text-center bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 ml-0.5">Minggu</label>
+                                        <input type="number" name="max_durasi_minggu" min="0"
+                                            value="{{ old('max_durasi_minggu', $fasilitas->max_durasi_minggu) }}"
+                                            class="w-full px-4 py-3 text-center bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 ml-0.5">Bulan</label>
+                                        <input type="number" name="max_durasi_bulan" min="0"
+                                            value="{{ old('max_durasi_bulan', $fasilitas->max_durasi_bulan) }}"
+                                            class="w-full px-4 py-3 text-center bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 ml-0.5">Tahun</label>
+                                        <input type="number" name="max_durasi_tahun" min="0"
+                                            value="{{ old('max_durasi_tahun', $fasilitas->max_durasi_tahun) }}"
+                                            class="w-full px-4 py-3 text-center bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm shadow-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Asrama Room Specifications --}}<div x-show="tipe === 'asrama'" x-cloak class="w-full bg-gradient-to-br from-blue-50/40 to-indigo-50/30 rounded-3xl border border-blue-100/60 p-6 space-y-4">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-[#1265A8]/10 flex items-center justify-center">
@@ -409,12 +601,12 @@
 
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Tipe Kamar</label>
+                                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Tipe Kamar</label>
                                                 @include('admin.dashboard.partials._room_type_dropdown', ['roomIndex' => 'ri', 'roomsVar' => 'rooms'])
                                             </div>
                                             <div class="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Jumlah</label>
+                                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Jumlah</label>
                                                     <input type="number" x-model.number="rooms[ri].jumlah" min="1"
                                                         class="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all font-semibold text-sm">
                                                 </div>
@@ -423,7 +615,7 @@
 
                                         {{-- Keunggulan Tipe Kamar --}}
                                         <div>
-                                            <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Keunggulan Tipe Kamar</label>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Keunggulan Tipe Kamar</label>
                                             <textarea x-model="rooms[ri].keunggulan" rows="2"
                                                 placeholder="Deskripsi singkat keunggulan tipe kamar ini..."
                                                 class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-medium text-sm resize-none"></textarea>
@@ -432,7 +624,7 @@
                                         {{-- Ukuran (Panjang × Lebar) & Konfigurasi Ranjang --}}
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Ukuran Kamar</label>
+                                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Ukuran Kamar</label>
                                                 <div class="flex items-center gap-2">
                                                     <div class="relative flex-1">
                                                         <input type="number" x-model="rooms[ri].panjang" min="0" step="0.1"
@@ -449,7 +641,7 @@
                                                 </div>
                                             </div>
                                             <div>
-                                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Konfigurasi Ranjang</label>
+                                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Konfigurasi Ranjang</label>
                                                 <input type="text" x-model="rooms[ri].ranjang"
                                                     placeholder="Contoh: 1 King Bed"
                                                     class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none font-bold text-sm">
@@ -458,7 +650,7 @@
 
                                         {{-- Nomor Kamar Tagging --}}
                                         <div>
-                                            <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Nomor Kamar</label>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Nomor Kamar</label>
                                             <div class="flex gap-2">
                                                 <input type="text"
                                                     x-model="rooms[ri].temp_input"
@@ -496,13 +688,13 @@
 
                                         <div class="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Cap. Dewasa (Kamar)</label>
+                                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Cap. Dewasa (Kamar)</label>
                                                 <input type="number" x-model.number="rooms[ri].max_dewasa" min="1"
                                                     :name="'rooms[' + ri + '][max_dewasa]'"
                                                     class="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all font-semibold text-sm">
                                             </div>
                                             <div>
-                                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Cap. Anak (Kamar)</label>
+                                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Cap. Anak (Kamar)</label>
                                                 <input type="number" x-model.number="rooms[ri].max_anak" min="0"
                                                     :name="'rooms[' + ri + '][max_anak]'"
                                                     class="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-[#1265A8] outline-none transition-all font-semibold text-sm">
@@ -510,7 +702,7 @@
                                         </div>
 
                                         <div>
-                                            <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-0.5">Foto Kamar (3 foto)</label>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Foto Kamar (3 foto)</label>
                                             <div class="grid grid-cols-3 gap-3">
                                                 <template x-for="fi in [0, 1, 2]" :key="fi">
                                                     <div class="relative overflow-hidden rounded-2xl transition-all duration-500 h-32 flex items-center justify-center group/foto cursor-pointer"
@@ -538,7 +730,7 @@
 
                                         {{-- Fasilitas Kamar — 10 icon cards with micro-inputs --}}
                                         <div>
-                                            <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-0.5">Fasilitas Kamar</label>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-0.5">Fasilitas Kamar</label>
                                             <div class="grid grid-cols-5 sm:grid-cols-5 gap-1.5">
                                                 <template x-if="rooms[ri].fasShow.ac"><div class="relative group/label flex flex-col items-center bg-white border border-slate-200 rounded-xl px-1.5 py-2.5 transition-all duration-200 hover:border-[#1265A8] hover:shadow-sm">
                                                     <span class="text-[7px] font-black text-slate-500 uppercase tracking-wider mb-0.5 leading-tight text-center">AC</span>
@@ -631,7 +823,7 @@
                                         </div>
 
                                         <div>
-                                            <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-0.5">Harga Sewa</label>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 ml-0.5">Harga Sewa</label>
                                             <div class="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <label class="block text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-0.5">Harian <span class="text-red-400">*</span></label>
@@ -719,6 +911,19 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @php
+        $defaultAulaLabels = ['Wifi', 'Sound System', 'AC', 'Kursi', 'Meja', 'Panggung', 'Proyektor'];
+        $defaultAsramaLabels = ['Shower', 'AC', 'Wifi', 'Parkir', 'TV', 'Lemari'];
+        $savedLabels = $fasilitas->labels ?? [];
+        $initLabelsAsrama = $fasilitas->tipe === 'asrama'
+            ? (count($savedLabels) > 0 ? $savedLabels : $defaultAsramaLabels)
+            : [];
+        $initLabelsAula = $fasilitas->tipe === 'aula'
+            ? (count($savedLabels) > 0 ? $savedLabels : $defaultAulaLabels)
+            : [];
+        $labelsPoolAsrama = array_values(array_unique(array_merge($defaultAsramaLabels, $initLabelsAsrama)));
+        $labelsPoolAula   = array_values(array_unique(array_merge($defaultAulaLabels, $initLabelsAula)));
+    @endphp
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('facilityEditor', () => ({
@@ -731,11 +936,21 @@
                 showCustomRoomInput: false,
 
                 labels: {
-                    asrama: [...new Set(['Shower', 'AC', 'Wifi', 'Parkir', 'TV', 'Lemari', ...@json($fasilitas->labels ?? [])])],
-                    aula:   [...new Set(['Wifi', 'Sound System', 'AC', 'Kursi', 'Meja', 'Panggung', 'Proyektor', ...@json($fasilitas->labels ?? [])])]
+                    asrama: @json($labelsPoolAsrama),
+                    aula:   @json($labelsPoolAula)
                 },
-                selectedLabels: @json($fasilitas->labels ?? []),
-                customLabel: '',
+                selectedLabelsAsrama: @json($initLabelsAsrama),
+                selectedLabelsAula:   @json($initLabelsAula),
+                customLabelAsrama: '',
+                customLabelAula: '',
+                aulaFasilitas: @json($fasilitas->paket_harian[0]['fasilitas_aula'] ?? []),
+                aulaFasNama: '',
+                aulaFasJumlah: 1,
+                aulaHargaHarian:   '{{ $aulaHargaHarian }}',
+                aulaHargaMingguan: '{{ $aulaHargaMingguan }}',
+                aulaHargaBulanan:  '{{ $aulaHargaBulanan }}',
+                aulaHargaTahunan:  '{{ $aulaHargaTahunan }}',
+                aulaLuasEdit: {{ isset($fasilitas->paket_harian[0]['panjang']) && isset($fasilitas->paket_harian[0]['lebar']) ? ($fasilitas->paket_harian[0]['panjang'] * $fasilitas->paket_harian[0]['lebar']) : 0 }},
                 galleryPreviews: [
                     @if(isset($fasilitas->gallery[0])) '/storage/fasilitas/gallery/{{ $fasilitas->gallery[0] }}' @else null @endif,
                     @if(isset($fasilitas->gallery[1])) '/storage/fasilitas/gallery/{{ $fasilitas->gallery[1] }}' @else null @endif,
@@ -963,18 +1178,30 @@
                     }
                 },
 
-                addCustomLabel() {
-                    if (this.customLabel.trim() !== '') {
-                        const label = this.customLabel.trim();
-                        if (!this.labels[this.tipe].includes(label)) this.labels[this.tipe].push(label);
-                        if (!this.selectedLabels.includes(label)) this.selectedLabels.push(label);
-                        this.customLabel = '';
-                    }
+                addCustomLabelAsrama() {
+                    const label = this.customLabelAsrama.trim();
+                    if (!label) return;
+                    if (!this.labels['asrama'].includes(label)) this.labels['asrama'].push(label);
+                    if (!this.selectedLabelsAsrama.includes(label)) this.selectedLabelsAsrama.push(label);
+                    this.customLabelAsrama = '';
                 },
 
-                removeLabel(label) {
-                    this.labels[this.tipe] = this.labels[this.tipe].filter(l => l !== label);
-                    this.selectedLabels = this.selectedLabels.filter(l => l !== label);
+                removeLabelAsrama(label) {
+                    this.labels['asrama'] = this.labels['asrama'].filter(l => l !== label);
+                    this.selectedLabelsAsrama = this.selectedLabelsAsrama.filter(l => l !== label);
+                },
+
+                addCustomLabelAula() {
+                    const label = this.customLabelAula.trim();
+                    if (!label) return;
+                    if (!this.labels['aula'].includes(label)) this.labels['aula'].push(label);
+                    if (!this.selectedLabelsAula.includes(label)) this.selectedLabelsAula.push(label);
+                    this.customLabelAula = '';
+                },
+
+                removeLabelAula(label) {
+                    this.labels['aula'] = this.labels['aula'].filter(l => l !== label);
+                    this.selectedLabelsAula = this.selectedLabelsAula.filter(l => l !== label);
                 },
 
                 addCustomFasilitas(ri) {
@@ -1082,9 +1309,24 @@
                     }).then((result) => {
                         if (result.isConfirmed) {
                             this.tipe = newType;
-                            this.selectedLabels = [];
                         }
                     });
+                },
+
+                aulaHitungLuasEdit() {
+                    const p = parseFloat(document.getElementById('aulaPanjangEdit')?.value) || 0;
+                    const l = parseFloat(document.getElementById('aulaLebarEdit')?.value) || 0;
+                    this.aulaLuasEdit = p > 0 && l > 0 ? p * l : 0;
+                },
+
+                formatHargaAula(event, type) {
+                    const raw = event.target.value.replace(/\D/g, '');
+                    const hiddenMap = { harian: 'aulaHargaHarianHidden', mingguan: 'aulaHargaMingguanHidden', bulanan: 'aulaHargaBulananHidden', tahunan: 'aulaHargaTahunanHidden' };
+                    const keyMap = { harian: 'aulaHargaHarian', mingguan: 'aulaHargaMingguan', bulanan: 'aulaHargaBulanan', tahunan: 'aulaHargaTahunan' };
+                    const el = document.getElementById(hiddenMap[type]);
+                    if (el) el.value = raw;
+                    if (keyMap[type]) this[keyMap[type]] = raw;
+                    event.target.value = raw ? new Intl.NumberFormat('id-ID').format(raw) : '';
                 }
             }));
         });
@@ -1236,6 +1478,32 @@
                     customClass: { popup: 'rounded-[2.5rem] p-8' }
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        // Sync labels ke hidden inputs sebelum submit
+                        const alpineLabels = window.__alpineRoot;
+                        const labelsContainer = document.getElementById('labelsHiddenContainer');
+                        if (labelsContainer && alpineLabels) {
+                            labelsContainer.innerHTML = '';
+                            const activeLabels = alpineLabels.tipe === 'aula'
+                                ? (alpineLabels.selectedLabelsAula || [])
+                                : (alpineLabels.selectedLabelsAsrama || []);
+                            activeLabels.forEach(lbl => {
+                                const inp = document.createElement('input');
+                                inp.type  = 'hidden';
+                                inp.name  = 'labels[]';
+                                inp.value = lbl;
+                                labelsContainer.appendChild(inp);
+                            });
+
+                            // Sync aula fasilitas
+                            if (alpineLabels.tipe === 'aula') {
+                                const inp = document.createElement('input');
+                                inp.type  = 'hidden';
+                                inp.name  = 'aula_fasilitas';
+                                inp.value = JSON.stringify(alpineLabels.aulaFasilitas || []);
+                                labelsContainer.appendChild(inp);
+                            }
+                        }
+
                         document.getElementById('loadingOverlay').classList.remove('hidden');
                         form.submit();
                     }

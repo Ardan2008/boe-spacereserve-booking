@@ -36,18 +36,17 @@ class FasilitasController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'tipe' => 'required|in:asrama,aula',
-            'deskripsi' => 'required',
+            'deskripsi' => 'required|string',
             'detail' => 'nullable',
             'harga' => 'nullable|numeric',
             'harga_bulanan' => 'nullable|numeric',
             'max_dewasa' => 'nullable|integer',
             'max_anak' => 'nullable|integer',
-            'max_durasi_harian' => 'nullable|integer',
             'max_durasi_hari' => 'nullable|integer|min:0',
             'max_durasi_minggu' => 'nullable|integer|min:0',
             'max_durasi_bulan' => 'nullable|integer|min:0',
             'max_durasi_tahun' => 'nullable|integer|min:0',
-            'jam_operasional' => 'nullable|string',
+            'jam_operasional' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'paket_harian' => 'nullable|string',
@@ -56,6 +55,12 @@ class FasilitasController extends Controller
             'labels' => 'nullable|array',
             'room_fotos' => 'nullable|array',
             'room_fotos.*.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'aula_harga_harian' => 'nullable|numeric|min:0',
+            'aula_harga_mingguan' => 'nullable|numeric|min:0',
+            'aula_harga_bulanan' => 'nullable|numeric|min:0',
+            'aula_harga_tahunan' => 'nullable|numeric|min:0',
+            'aula_panjang' => 'nullable|numeric|min:0',
+            'aula_lebar' => 'nullable|numeric|min:0',
         ]);
 
         $oldHarga = $fasilitas->harga;
@@ -64,6 +69,34 @@ class FasilitasController extends Controller
         $paket_harian = $request->paket_harian ? json_decode($request->paket_harian, true) : [];
         if (!is_array($paket_harian)) {
             $paket_harian = [];
+        }
+
+        // For Aula, always rebuild paket_harian from individual form inputs
+        if ($request->input('tipe') === 'aula') {
+            $aulaHargaHarian   = (float) ($request->aula_harga_harian   ?? 0);
+            $aulaHargaMingguan = (float) ($request->aula_harga_mingguan ?? 0);
+            $aulaHargaBulanan  = (float) ($request->aula_harga_bulanan  ?? 0);
+            $aulaHargaTahunan  = (float) ($request->aula_harga_tahunan  ?? 0);
+            $aulaPanjang       = (float) ($request->aula_panjang        ?? 0);
+            $aulaLebar         = (float) ($request->aula_lebar          ?? 0);
+            $aulaFasilitas     = $request->aula_fasilitas
+                ? json_decode($request->aula_fasilitas, true)
+                : ($fasilitas->paket_harian[0]['fasilitas_aula'] ?? []);
+            if (!is_array($aulaFasilitas)) $aulaFasilitas = [];
+
+            $paket_harian = [[
+                'tipe' => 'aula',
+                'jumlah' => 1,
+                'harga_harian'   => $aulaHargaHarian,
+                'harga_mingguan' => $aulaHargaMingguan,
+                'harga_bulanan'  => $aulaHargaBulanan,
+                'harga_tahunan'  => $aulaHargaTahunan,
+                'panjang'        => $aulaPanjang,
+                'lebar'          => $aulaLebar,
+                'fasilitas_aula' => $aulaFasilitas,
+                'foto' => [],
+                'nomor_kamar' => [],
+            ]];
         }
 
         // Derive canonical harga from first room's harga_harian (prices live in paket_harian now)
@@ -94,7 +127,7 @@ class FasilitasController extends Controller
         // Calculate thumbnail price range from all rooms' all price tiers
         $allPrices = [];
         foreach ($paket_harian as $room) {
-            foreach (['harga_harian','harga_mingguan','harga_bulanan','harga_tahunan'] as $pKey) {
+            foreach (['harga_jam','harga_harian','harga_mingguan','harga_bulanan','harga_tahunan'] as $pKey) {
                 $v = isset($room[$pKey]) ? (float) $room[$pKey] : 0;
                 if ($v > 0) $allPrices[] = $v;
             }
@@ -125,7 +158,6 @@ class FasilitasController extends Controller
             'harga_bulanan' => $h_bulanan > 0 ? $h_bulanan : null,
             'max_dewasa' => $request->max_dewasa,
             'max_anak' => $request->max_anak,
-            'max_durasi_harian' => $request->max_durasi_harian,
             'max_durasi_hari' => $request->max_durasi_hari ? (int) $request->max_durasi_hari : null,
             'max_durasi_minggu' => $request->max_durasi_minggu ? (int) $request->max_durasi_minggu : null,
             'max_durasi_bulan' => $request->max_durasi_bulan ? (int) $request->max_durasi_bulan : null,
@@ -307,16 +339,15 @@ class FasilitasController extends Controller
             $request->validate([
                 'nama' => 'required|string|max:255',
                 'tipe' => 'required|in:asrama,aula',
-                'deskripsi' => 'required',
+                'deskripsi' => 'required|string',
                 'detail' => 'nullable',
                 'max_dewasa_aula' => 'nullable|integer',
-                'max_durasi_harian' => 'nullable|integer',
                 'max_durasi_hari' => 'nullable|integer|min:0',
                 'max_durasi_minggu' => 'nullable|integer|min:0',
                 'max_durasi_bulan' => 'nullable|integer|min:0',
                 'max_durasi_tahun' => 'nullable|integer|min:0',
-                'jumlah_kamar'     => 'required|integer|min:1',
-                'jam_operasional' => 'nullable|string',
+                'jumlah_kamar'     => 'nullable|integer|min:1',
+                'jam_operasional' => 'required|string',
                 'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
                 'gallery.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'paket_harian' => 'nullable|string',
@@ -324,6 +355,12 @@ class FasilitasController extends Controller
                 'labels' => 'nullable|array',
                 'room_fotos' => 'nullable|array',
                 'room_fotos.*.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'aula_harga_harian' => 'nullable|numeric|min:0',
+                'aula_harga_mingguan' => 'nullable|numeric|min:0',
+                'aula_harga_bulanan' => 'nullable|numeric|min:0',
+                'aula_harga_tahunan' => 'nullable|numeric|min:0',
+                'aula_panjang' => 'nullable|numeric|min:0',
+                'aula_lebar' => 'nullable|numeric|min:0',
             ]);
 
             $imageName = null;
@@ -335,10 +372,15 @@ class FasilitasController extends Controller
 
             $gallery = [];
             if ($request->hasFile('gallery')) {
+                $galleryPath = public_path('storage/fasilitas/gallery');
+                if (!File::exists($galleryPath)) {
+                    File::makeDirectory($galleryPath, 0755, true);
+                }
                 foreach ($request->file('gallery') as $index => $file) {
                     if ($file) {
-                        $path = $file->store('fasilitas/gallery', 'public');
-                        $gallery[$index] = basename($path);
+                        $name = time() . '_gallery_' . $index . '.' . $file->getClientOriginalExtension();
+                        $file->move($galleryPath, $name);
+                        $gallery[$index] = $name;
                     }
                 }
             }
@@ -369,22 +411,55 @@ class FasilitasController extends Controller
                 }
             }
 
-            // Get prices from first room in paket_harian
-            $firstRoom = $paket_harian[0] ?? [];
-            $h_harian = (float) ($firstRoom['harga_harian'] ?? 0);
-            $h_bulanan = !empty($firstRoom['harga_bulanan']) ? (float) $firstRoom['harga_bulanan'] : null;
+            if ($request->input('tipe') === 'aula') {
+                $aulaHargaHarian   = (float) ($request->aula_harga_harian   ?? 0);
+                $aulaHargaMingguan = (float) ($request->aula_harga_mingguan ?? 0);
+                $aulaHargaBulanan  = (float) ($request->aula_harga_bulanan  ?? 0);
+                $aulaHargaTahunan  = (float) ($request->aula_harga_tahunan  ?? 0);
+                $aulaPanjang       = (float) ($request->aula_panjang        ?? 0);
+                $aulaLebar         = (float) ($request->aula_lebar          ?? 0);
+                $aulaFasilitas     = $request->aula_fasilitas
+                    ? json_decode($request->aula_fasilitas, true)
+                    : [];
+                if (!is_array($aulaFasilitas)) $aulaFasilitas = [];
 
-            // Collect all price tiers across all rooms to build thumbnail range
-            $allPrices = [];
-            foreach ($paket_harian as $room) {
-                foreach (['harga_harian','harga_mingguan','harga_bulanan','harga_tahunan'] as $pKey) {
-                    $v = isset($room[$pKey]) ? (float) $room[$pKey] : 0;
-                    if ($v > 0) $allPrices[] = $v;
+                $paket_harian = [[
+                    'tipe' => 'aula',
+                    'jumlah' => 1,
+                    'harga_harian'   => $aulaHargaHarian,
+                    'harga_mingguan' => $aulaHargaMingguan,
+                    'harga_bulanan'  => $aulaHargaBulanan,
+                    'harga_tahunan'  => $aulaHargaTahunan,
+                    'panjang'        => $aulaPanjang,
+                    'lebar'          => $aulaLebar,
+                    'fasilitas_aula' => $aulaFasilitas,
+                    'foto' => [],
+                    'nomor_kamar' => [],
+                ]];
+
+                $allPrices = array_values(array_filter([
+                    $aulaHargaHarian, $aulaHargaMingguan, $aulaHargaBulanan, $aulaHargaTahunan
+                ], fn($v) => $v > 0));
+                if (empty($allPrices)) $allPrices = [0];
+                $h_harian  = $aulaHargaHarian;
+                $h_bulanan = $aulaHargaBulanan > 0 ? $aulaHargaBulanan : null;
+                $firstRoom = [];
+            } else {
+                $firstRoom = $paket_harian[0] ?? [];
+                $h_harian  = (float) ($firstRoom['harga_harian'] ?? 0);
+                $h_bulanan = !empty($firstRoom['harga_bulanan']) ? (float) $firstRoom['harga_bulanan'] : null;
+
+                $allPrices = [];
+                foreach ($paket_harian as $room) {
+                    foreach (['harga_harian','harga_mingguan','harga_bulanan','harga_tahunan'] as $pKey) {
+                        $v = isset($room[$pKey]) ? (float) $room[$pKey] : 0;
+                        if ($v > 0) $allPrices[] = $v;
+                    }
                 }
-            }
-            if (empty($allPrices)) {
-                $allPrices = [$h_harian > 0 ? $h_harian : 0];
-                if ($h_bulanan > 0) $allPrices[] = $h_bulanan;
+                if (empty($allPrices)) {
+                    $allPrices = [$h_harian > 0 ? $h_harian : 0];
+                    if ($h_bulanan > 0) $allPrices[] = $h_bulanan;
+                }
             }
 
             $minPrice = min($allPrices);
@@ -411,12 +486,11 @@ class FasilitasController extends Controller
                     ? (int) ($firstRoom['max_dewasa'] ?? 1)
                     : (int) $request->max_dewasa_aula,
                 'max_anak' => (int) ($firstRoom['max_anak'] ?? 0),
-            'max_durasi_harian' => $request->max_durasi_harian ? (int) $request->max_durasi_harian : null,
                 'max_durasi_hari' => $request->max_durasi_hari ? (int) $request->max_durasi_hari : null,
                 'max_durasi_minggu' => $request->max_durasi_minggu ? (int) $request->max_durasi_minggu : null,
                 'max_durasi_bulan' => $request->max_durasi_bulan ? (int) $request->max_durasi_bulan : null,
                 'max_durasi_tahun' => $request->max_durasi_tahun ? (int) $request->max_durasi_tahun : null,
-                'jumlah_kamar'     => (int) $request->jumlah_kamar, 
+                'jumlah_kamar'     => $request->jumlah_kamar ? (int) $request->jumlah_kamar : 1,
                 'jam_operasional' => $request->jam_operasional,
                 'image' => $imageName, 
                 'gallery' => $gallery,
