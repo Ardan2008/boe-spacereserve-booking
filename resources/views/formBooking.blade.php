@@ -1252,6 +1252,24 @@ document.addEventListener('alpine:init', () => {
                 while (this.childAges.length < count) this.childAges.push('');
                 this.childAges = this.childAges.slice(0, count);
             });
+            this.$watch('childAges', () => {
+                if (this.currentFacility?.tipe !== 'asrama') return;
+                const totalAdults = this.adults + this.billableChildren;
+                const neededRooms = Math.max(
+                    Math.ceil(totalAdults / 2),
+                    Math.ceil(this.freeChildren / 2)
+                );
+                if (neededRooms > this.rooms) {
+                    const canAdd = Math.min(neededRooms, this.maxRoomsFromFacility);
+                    if (this.maxStock > 0) {
+                        this.rooms = Math.min(canAdd, this.maxStock);
+                    } else {
+                        this.rooms = canAdd;
+                    }
+                    this.step2Errors.rooms = false;
+                    this.step2Errors.roomsMsg = '';
+                }
+            }, { deep: true });
             this.$watch('currentMonth', () => { this.updateDaysInMonth(); this.fetchCalendarData(); });
             this.$watch('currentYear',  () => { this.updateDaysInMonth(); this.fetchCalendarData(); });
             this.$watch('selectedFacilityId', () => { this.fetchCalendarData(); });
@@ -1441,21 +1459,23 @@ document.addEventListener('alpine:init', () => {
 
         // ── Visual helpers ────────────────────────────────────────────
         occupantSlot(roomNumber, slot) {
+            const totalAdults = this.adults + this.billableChildren;
             if (slot <= 2) {
                 const adultIdx = (roomNumber - 1) * 2 + (slot - 1);
-                return adultIdx < this.adults ? 'adult' : 'empty';
+                return adultIdx < totalAdults ? 'adult' : 'empty';
             }
             const childIdx = (roomNumber - 1) * 2 + (slot - 3);
-            return childIdx < this.children ? 'child' : 'empty';
+            return childIdx < this.freeChildren ? 'child' : 'empty';
         },
 
         roomLabel(roomNumber) {
+            const totalAdults = this.adults + this.billableChildren;
             const adultStart = (roomNumber - 1) * 2;
             let a = 0;
-            for (let i = adultStart; i < adultStart + 2; i++) { if (i < this.adults) a++; }
+            for (let i = adultStart; i < adultStart + 2; i++) { if (i < totalAdults) a++; }
             const childStart = (roomNumber - 1) * 2;
             let c = 0;
-            for (let i = childStart; i < childStart + 2; i++) { if (i < this.children) c++; }
+            for (let i = childStart; i < childStart + 2; i++) { if (i < this.freeChildren) c++; }
             if (a === 0 && c === 0) return 'Kosong';
             const parts = [];
             if (a > 0) parts.push(a + ' Dewasa');
