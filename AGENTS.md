@@ -31,7 +31,7 @@ php artisan test --filter=SomeTest  # single test
 ### Auth
 - **Session-based** admin auth (no Breeze/Jetstream/Sanctum).
 - **Passwords stored in plaintext** (`admins.password`). This is intentional.
-- Admin login URL is dynamic: `/{ADMIN_LOGIN_SECRET}` — read from `config/services.php` via `ADMIN_LOGIN_SECRET` env var (not in `.env.example`; must be added manually).
+- Admin login URL: `/admin/formLogin`.
 - Middleware `admin.access` (aliased in `bootstrap/app.php`) checks session. Supports:
   - `admin.access:owner` — owner-only
   - `admin.access:can_edit` — owner or `can_edit=true` admin

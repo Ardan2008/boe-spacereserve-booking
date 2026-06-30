@@ -82,7 +82,24 @@
                 @endif
             </div>
 
-            <form action="{{ route('admin.login') }}" method="POST" class="space-y-6">
+            <div id="lockoutBanner" class="hidden mb-6 p-5 bg-red-50 border border-red-200 rounded-2xl text-center">
+                <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-4">
+                    <svg class="h-7 w-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0-8v4m-2.357-5.921L4.572 5.457A2 2 0 003 7.343v6.75a10 10 0 005.101 8.71l4.242 2.357a1 1 0 001.314 0l4.242-2.356A10 10 0 0021 14.092V7.343a2 2 0 00-1.572-1.886l-5.071-1.378a2 2 0 00-1.357 0z" />
+                    </svg>
+                </div>
+                <h4 class="text-base font-extrabold text-red-800 mb-1">AKUN TERKUNCI SEMENTARA</h4>
+                <p class="text-xs font-medium text-red-600 mb-3">Terlalu banyak percobaan gagal. Silakan tunggu</p>
+                <div class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span id="countdownDisplay" class="text-2xl font-black text-red-600 tabular-nums">30</span>
+                    <span class="text-xs font-bold text-red-500 uppercase tracking-wider">detik</span>
+                </div>
+            </div>
+
+            <form action="{{ route('admin.login') }}" method="POST" class="space-y-6" id="loginForm">
                 @csrf
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-500 ml-1 uppercase tracking-widest">Identitas Admin</label>
@@ -186,7 +203,52 @@
     const capsAlert = document.getElementById('capsLockAlert');
     const userInput = document.getElementById('userInput');
     const loginBtn = document.getElementById('btnLogin');
+    const loginForm = document.getElementById('loginForm');
+    const lockoutBanner = document.getElementById('lockoutBanner');
+    const countdownDisplay = document.getElementById('countdownDisplay');
     let hideTimeout;
+    let lockoutInterval;
+
+    function disableForm(disabled) {
+        const inputs = loginForm.querySelectorAll('input');
+        const buttons = loginForm.querySelectorAll('button');
+        inputs.forEach(el => el.disabled = disabled);
+        buttons.forEach(el => el.disabled = disabled);
+        if (disabled) {
+            loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            loginBtn.classList.remove('hover:shadow-xl', 'hover:shadow-blue-500/40');
+        } else {
+            validateForm();
+        }
+    }
+
+    function startLockout(seconds) {
+        lockoutBanner.classList.remove('hidden');
+        countdownDisplay.textContent = seconds;
+        disableForm(true);
+
+        if (lockoutInterval) clearInterval(lockoutInterval);
+
+        lockoutInterval = setInterval(() => {
+            let s = parseInt(countdownDisplay.textContent);
+            s--;
+            countdownDisplay.textContent = s;
+            if (s <= 0) {
+                clearInterval(lockoutInterval);
+                lockoutInterval = null;
+                lockoutBanner.classList.add('hidden');
+                disableForm(false);
+            }
+        }, 1000);
+    }
+
+    // Cek lockout dari server saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', function () {
+        const initialRemaining = {{ $remaining }};
+        if (initialRemaining > 0) {
+            startLockout(initialRemaining);
+        }
+    });
 
     // --- FUNGSI BARU: RESET ERROR ---
     function resetError() {
@@ -276,8 +338,7 @@
     }
 
     function finalSubmit(el) {
-        resetError(); // Bersihkan error sebelum kirim request baru
-        const loginForm = document.querySelector('form');
+        resetError();
         const formData = new FormData(loginForm);
 
         el.innerHTML = `
@@ -299,6 +360,11 @@
             const data = await response.json();
             if (response.ok && data.success) {
                 window.location.href = data.redirect;
+            } else if (data.blocked) {
+                hideModal('confirmLoginModal');
+                startLockout(data.retry_after);
+                el.innerHTML = "Ya, Masuk Sekarang";
+                el.classList.remove('pointer-events-none', 'opacity-80');
             } else {
                 showLoginError(data);
                 el.innerHTML = "Ya, Masuk Sekarang";

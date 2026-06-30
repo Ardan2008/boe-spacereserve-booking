@@ -153,8 +153,7 @@ Route::get('/sitemap.xml', function () {
 })->name('sitemap');
 
 Route::get('/robots.txt', function () {
-    $disallowAdmin = config('services.admin.secret') ?: 'admin/login-page';
-    return response()->view('robots', compact('disallowAdmin'))->header('Content-Type', 'text/plain');
+    return response()->view('robots', ['disallowAdmin' => 'admin/formLogin'])->header('Content-Type', 'text/plain');
 })->name('robots');
 
 // --- ROUTE ASLI KAMU (TIDAK DIUBAH) ---
@@ -195,11 +194,13 @@ Route::get('/api/validate-email', [ValidationController::class, 'email'])->name(
 
 // Bagian Admin
 // -- form login
-// ambil kode rahasia dari config (yang terhubung ke .env)
-$secretUrl = config('services.admin.secret') ?: 'admin/login-page';
-
-Route::get('/' . $secretUrl, function () {
-    return view('admin.formLogin');
+Route::get('/admin/formLogin', function () {
+    $ip = request()->ip();
+    $cacheKey = 'login_attempts:' . $ip;
+    $lockoutKey = $cacheKey . ':locked_until';
+    $lockedUntil = \Illuminate\Support\Facades\Cache::get($lockoutKey);
+    $remaining = $lockedUntil ? max(0, $lockedUntil - time()) : 0;
+    return view('admin.formLogin', compact('remaining'));
 })->name('formLogin');
 
 // Auth Admin

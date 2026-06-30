@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Admins;
 use App\Models\Fasilitas;
 use App\Models\Booking;
@@ -13,19 +14,38 @@ class AdminsController extends Controller
 {
     public function login(Request $request)
     {
-
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        // Cari admin berdasarkan username
+        $ip = $request->ip();
+        $cacheKey = 'login_attempts:' . $ip;
+        $lockoutKey = $cacheKey . ':locked_until';
+
+        $lockedUntil = Cache::get($lockoutKey);
+        if ($lockedUntil && $lockedUntil > time()) {
+            $remaining = $lockedUntil - time();
+            return response()->json([
+                'success' => false,
+                'blocked' => true,
+                'retry_after' => $remaining,
+                'errors' => ['login' => ["Terlalu banyak percobaan. Coba lagi dalam {$remaining} detik."]]
+            ], 429);
+        }
+
+        if ($lockedUntil) {
+            Cache::forget($cacheKey);
+            Cache::forget($lockoutKey);
+        }
+
         $admin = Admins::where('username', $request->username)->first();
 
-        // Cek username & password (tanpa hash)
         if ($admin && $request->password === $admin->password) {
-            
-            // CEK PERSISTENT FORCE LOGOUT (BANNED/BLOCKED BY OWNER)
+
+            Cache::forget($cacheKey);
+            Cache::forget($lockoutKey);
+
             if ($admin->force_logout && $admin->logout_type === 'manual') {
                 return response()->json([
                     'success' => false,
@@ -35,12 +55,10 @@ class AdminsController extends Controller
                 ], 401);
             }
 
-            // Jika logout karena update, izinkan login kembali dan reset status
             if ($admin->force_logout && $admin->logout_type === 'update') {
                 $admin->update(['force_logout' => false, 'logout_type' => null]);
             }
 
-            // Simpan session
             $request->session()->put('id_log', $admin->id_log);
             $request->session()->put('nama', $admin->nama);
             $request->session()->put('role', $admin->role);
@@ -50,6 +68,13 @@ class AdminsController extends Controller
                 'success' => true,
                 'redirect' => route('dashboardMaster')
             ]);
+        }
+
+        $attempts = (int) Cache::get($cacheKey, 0) + 1;
+        Cache::put($cacheKey, $attempts, 60);
+
+        if ($attempts >= 5) {
+            Cache::put($lockoutKey, time() + 30, 30);
         }
 
         return response()->json([
